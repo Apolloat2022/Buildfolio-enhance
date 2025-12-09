@@ -1,0 +1,36 @@
+# Backup your current package.json
+copy package.json package.json.backup
+
+# Create a new correct package.json
+echo {
+  "name": "projectshowcase",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.0.2",
+    "@prisma/client": "^5.7.0",
+    "next": "^14.0.4",
+    "next-auth": "^5.0.0-beta.25",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8.4.32",
+    "prisma": "^5.7.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3"
+  }
+} > package.json

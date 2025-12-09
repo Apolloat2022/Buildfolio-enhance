@@ -1,0 +1,96 @@
+// prisma/schema.prisma - COMPLETE VERSION
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  projects      Project[]
+  startedProjects StartedProject[]  // ADD THIS LINE
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  tags        String[]
+  githubUrl   String?
+  liveUrl     String?
+  status      String   @default("planned")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProjectTemplate {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  difficulty    String   // beginner, intermediate, advanced
+  timeEstimate  String   // e.g., "20 hours"
+  technologies  String[]
+  resumeImpact  Int      // 1-5
+  steps         String[] // Step-by-step guide
+  slug          String   @unique
+  category      String   // e-commerce, social, healthcare, etc.
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  startedProjects StartedProject[]
+  
+  @@index([difficulty])
+  @@index([category])
+}
+
+model StartedProject {
+  id          String          @id @default(cuid())
+  userId      String
+  template    ProjectTemplate @relation(fields: [templateId], references: [id])
+  templateId  String
+  progress    Int             @default(0) // 0-100 percentage
+  status      String          @default("in-progress") // not-started, in-progress, completed
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, templateId])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
