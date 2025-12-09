@@ -24,7 +24,7 @@ model User {
   sessions      Session[]
   projects      Project[]
   subscriptions Subscription[]
-  startedProjects StartedProject[]  // ✅ CORRECT: StartedProject (uppercase model name)
+  startedProjects StartedProject[]
 }
 
 model Account {
@@ -77,6 +77,24 @@ model Project {
   user        User     @relation(fields: [userId], references: [id])
 }
 
+// NEW: Step model for structured tutorial content
+model Step {
+  id                String   @id @default(cuid())
+  order             Int      // Step number (1, 2, 3...)
+  title             String
+  description       String?
+  codeSnippets      Json?    // Array of {language, code} objects
+  pitfalls          String[]
+  estimatedTime     String?
+  
+  // Relations
+  projectTemplateId String
+  projectTemplate   ProjectTemplate @relation(fields: [projectTemplateId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectTemplateId, order])  // Ensure unique ordering per template
+  @@index([projectTemplateId])
+}
+
 model ProjectTemplate {
   id              String   @id @default(cuid())
   slug            String   @unique
@@ -88,19 +106,21 @@ model ProjectTemplate {
   timeEstimate    String?
   technologies    String[]
   resumeImpact    Int?
-  steps           String[]
   category        String?
+  
+  // UPDATED: Now a relation to Step model (replaces String[] steps)
+  steps           Step[]   // <- CHANGED FROM String[] to Step[]
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
   // Relations
-  startedProjects StartedProject[]  // ✅ CORRECT: StartedProject (uppercase model name)
+  startedProjects StartedProject[]
   
   @@index([slug])
 }
 
-model StartedProject {  // ✅ CORRECT: PascalCase model name
+model StartedProject {
   id                String   @id @default(cuid())
   userId            String
   projectTemplateId String
