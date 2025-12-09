@@ -1,4 +1,4 @@
-// app/projects/[slug]/page.tsx - COMPLETE GUIDED BUILDER
+// app/projects/[slug]/page.tsx - USING CORRECT FIELD NAMES
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { auth } from '@/app/auth'
@@ -14,18 +14,26 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params
   const session = await auth()
   
-  // Get project with expanded details
+  // Get project with expanded details - SIMPLE FIXED VERSION
   const project = await prisma.projectTemplate.findUnique({
     where: { slug },
     include: {
-      startedProjects: session?.user?.id ? {
-        where: { userId: session.user.id }
-      } : [],
-      // In future: codeSnippets, commonPitfalls, etc.
+      startedProjects: true, // ✅ Simple fix - include all
     }
   })
 
   if (!project) notFound()
+
+  // Filter user's started project in JavaScript
+  const userStartedProject = project.startedProjects?.find(
+    sp => sp.userId === session?.user?.id
+  )
+
+  // Use actual database fields
+  const timeEstimateDisplay = project.timeEstimate || 'N/A'
+  const resumeStars = project.resumeImpact || 0
+  const technologies = project.technologies || []
+  const steps = project.steps || []
 
   // Expanded step details (would come from database)
   const detailedSteps = [
@@ -66,16 +74,16 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 }`}>
                   {project.difficulty}
                 </span>
-                <span className="text-gray-600">• {project.timeEstimate} • </span>
+                <span className="text-gray-600">• {timeEstimateDisplay} • </span>
                 <span className="flex">
-                  {'★'.repeat(project.resumeImpact)}
-                  {'☆'.repeat(5 - project.resumeImpact)}
+                  {'★'.repeat(resumeStars)}
+                  {'☆'.repeat(5 - resumeStars)}
                 </span>
               </div>
             </div>
             <ProgressTracker 
-              totalSteps={project.steps.length}
-              completedSteps={0} // Will come from user progress
+              totalSteps={steps.length}
+              completedSteps={userStartedProject?.progress || 0} // Use actual progress
             />
           </div>
         </div>
@@ -115,14 +123,17 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">🛠️ Technologies</h3>
               <div className="flex flex-wrap gap-2">
-                {project.technologies.map((tech) => (
+                {technologies.map((tech, index) => (
                   <span
-                    key={tech}
+                    key={index}
                     className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium"
                   >
                     {tech}
                   </span>
                 ))}
+                {technologies.length === 0 && (
+                  <span className="text-gray-500">No technologies listed</span>
+                )}
               </div>
             </div>
 

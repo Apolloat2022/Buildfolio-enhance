@@ -2,8 +2,10 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function AuthErrorPage() {
+// Wrap the main content in a separate component
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
 
@@ -17,5 +19,14 @@ export default function AuthErrorPage() {
           : 'Unknown authentication error'}
       </p>
     </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading error details...</div>}>
+      <AuthErrorContent />
+    </Suspense>
   );
 }

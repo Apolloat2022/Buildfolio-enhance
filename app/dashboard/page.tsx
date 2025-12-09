@@ -1,4 +1,4 @@
-﻿// app/dashboard/page.tsx - FIXED WITH TYPE ANNOTATIONS
+﻿// app/dashboard/page.tsx - COMPLETE FIX
 import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
@@ -12,7 +12,7 @@ export default async function DashboardPage() {
     redirect('/auth/signin')
   }
 
-  // Fetch projects from database (SERVER SIDE)
+  // Fetch projects from database
   const projects = await prisma.project.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
@@ -29,16 +29,24 @@ export default async function DashboardPage() {
     }
   })
 
-  // Calculate progress stats WITH EXPLICIT TYPES
+  // Calculate progress stats
   const completedCount = projects.filter((p: any) => p.status === 'completed').length
   const inProgressCount = projects.filter((p: any) => p.status === 'in-progress').length
   const plannedCount = projects.filter((p: any) => p.status === 'planned').length
 
-  // Pass data to client component
+  // TRANSFORM DATA: Convert null to appropriate types
+  const transformedProjects = projects.map(project => ({
+    ...project,
+    githubUrl: project.githubUrl ?? undefined,    // null → undefined
+    liveUrl: project.liveUrl ?? undefined,        // null → undefined
+    description: project.description ?? '',       // null → empty string
+  }))
+
+  // Pass transformed data
   return (
     <DashboardClient
       session={session}
-      initialProjects={projects}
+      initialProjects={transformedProjects}
       stats={{
         total: projects.length,
         completed: completedCount,
@@ -48,5 +56,3 @@ export default async function DashboardPage() {
     />
   )
 }
-
-// FORCE NEW COMMIT - $(Get-Date -Format 'yyyy-MM-dd HH:mm')

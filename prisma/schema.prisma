@@ -1,4 +1,6 @@
-// prisma/schema.prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,6 +8,23 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String?        @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  projects      Project[]
+  subscriptions Subscription[]
+  startedProjects StartedProject[]  // ✅ CORRECT: StartedProject (uppercase model name)
 }
 
 model Account {
@@ -21,8 +40,7 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -35,70 +53,81 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  projects      Project[]
-  startedProjects StartedProject[]  // Added field for the new relation
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Project {
   id          String   @id @default(cuid())
   title       String
-  description String
+  description String?
+  status      String   @default("planned")
   tags        String[]
   githubUrl   String?
   liveUrl     String?
-  status      String   @default("planned")
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model ProjectTemplate {
-  id            String   @id @default(cuid())
-  title         String
-  description   String
-  difficulty    String   // beginner, intermediate, advanced
-  timeEstimate  String   // e.g., "20 hours"
-  technologies  String[]
-  resumeImpact  Int      // 1-5
-  steps         String[] // Step-by-step guide
-  slug          String   @unique
-  category      String   // e-commerce, social, healthcare, etc.
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  startedProjects StartedProject[]
-
-  @@index([difficulty])
-  @@index([category])
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  description     String?
+  difficulty      String   @default("beginner")
+  
+  // ACTUAL DATABASE COLUMNS (based on your Neon database)
+  timeEstimate    String?
+  technologies    String[]
+  resumeImpact    Int?
+  steps           String[]
+  category        String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  startedProjects StartedProject[]  // ✅ CORRECT: StartedProject (uppercase model name)
+  
+  @@index([slug])
 }
 
-model StartedProject {
-  id          String          @id @default(cuid())
+model StartedProject {  // ✅ CORRECT: PascalCase model name
+  id                String   @id @default(cuid())
+  userId            String
+  projectTemplateId String
+  status            String   @default("not-started")
+  progress          Int      @default(0)
+  startedAt         DateTime @default(now())
+  lastActivityAt    DateTime @default(now())
+  completedAt       DateTime?
+  
+  // Relations
+  user            User            @relation(fields: [userId], references: [id])
+  projectTemplate ProjectTemplate @relation(fields: [projectTemplateId], references: [id])
+  
+  @@unique([userId, projectTemplateId])
+  @@index([userId])
+  @@index([projectTemplateId])
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
   userId      String
-  template    ProjectTemplate @relation(fields: [templateId], references: [id])
-  templateId  String
-  progress    Int             @default(0) // 0-100 percentage
-  status      String          @default("in-progress") // not-started, in-progress, completed
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, templateId])
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-}
-// Add to your User model
-model User {
-  // ... existing fields ...
-  stripeCustomerId String?
-  subscriptionTier   String  @default("free") // free, pro
-  subscriptionStatus String  @default("inactive") // active, canceled, past_due
-  subscriptionEndsAt DateTime?
+  user        User     @relation(fields: [userId], references: [id])
+  plan        String   @default("FREE")
+  status      String   @default("ACTIVE")
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
 }
