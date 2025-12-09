@@ -1,16 +1,24 @@
-// components/ProjectCard.tsx - Updated version
+// components/ProjectCard.tsx - Fixed version
 interface ProjectCardProps {
   project: {
     id: string;
     title: string;
-    description: string; // Now guaranteed to be string (not null)
+    description: string;
     difficulty: string;
-    timeEstimate: string; // Now guaranteed to be string
+    timeEstimate: string;
     technologies: string[];
-    resumeImpact: number; // Now guaranteed to be number
+    resumeImpact: number;
     slug: string;
-    category: string; // Now guaranteed to be string
-    steps: string[];
+    category: string;
+    // CHANGED FROM string[] to Step object array
+    steps: Array<{
+      id: string;
+      title: string;
+      order: number;
+      description: string | null;
+      projectTemplateId: string;
+      // Add other fields from your Step model as needed
+    }>;
   };
 }
 
@@ -59,6 +67,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         </div>
 
         <div className="flex justify-between items-center">
+          {/* CHANGED: project.steps.length now works with Step objects */}
           <span className="text-gray-500 text-sm">
             {project.steps.length} steps • {project.category}
           </span>

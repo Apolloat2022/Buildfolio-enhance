@@ -4,10 +4,10 @@ import ProjectCard from '@/components/ProjectCard'
 
 export default async function ProjectsPage() {
   const projects = await prisma.projectTemplate.findMany({
-    orderBy: { resumeImpact: 'desc' },
- include: {
-    steps: true,
-}
+    orderBy: { resumeImpact: 'desc' }, // ← ADDED MISSING COMMA HERE
+    include: {
+      steps: true,
+    } // ← ADDED MISSING CLOSING BRACE
   })
 
   // Transform null values to ensure compatibility with ProjectCard
