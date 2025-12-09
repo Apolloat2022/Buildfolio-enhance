@@ -1,8 +1,5 @@
-﻿export async function GET() { 
-  // DEFINE THE VARIABLES HERE
-  const githubId = process.env.GITHUB_ID || '';
-  const githubSecret = process.env.GITHUB_SECRET || '';
-  
+export async function GET() { 
+ 
   return Response.json({ 
     status: "Verification", 
     githubIdExists: !!githubId, 
@@ -14,4 +11,4 @@
     githubSecretStartsWith: githubSecret.substring(0, 4), 
     timestamp: new Date().toISOString(), 
   }); 
-}
+} 

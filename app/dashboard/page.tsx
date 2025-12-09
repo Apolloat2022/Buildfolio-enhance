@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx - FIXED SERVER COMPONENT VERSION
+﻿// app/dashboard/page.tsx - FIXED WITH TYPE ANNOTATIONS
 import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
@@ -29,10 +29,10 @@ export default async function DashboardPage() {
     }
   })
 
-  // Calculate progress stats
-  const completedCount = projects.filter(p => p.status === 'completed').length
-  const inProgressCount = projects.filter(p => p.status === 'in-progress').length
-  const plannedCount = projects.filter(p => p.status === 'planned').length
+  // Calculate progress stats WITH EXPLICIT TYPES
+  const completedCount = projects.filter((p: any) => p.status === 'completed').length
+  const inProgressCount = projects.filter((p: any) => p.status === 'in-progress').length
+  const plannedCount = projects.filter((p: any) => p.status === 'planned').length
 
   // Pass data to client component
   return (
@@ -48,3 +48,5 @@ export default async function DashboardPage() {
     />
   )
 }
+
+// FORCE NEW COMMIT - $(Get-Date -Format 'yyyy-MM-dd HH:mm')
