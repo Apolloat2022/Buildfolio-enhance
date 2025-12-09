@@ -48,3 +48,4 @@ const plannedCount = projects.filter((p: any) => p.status === 'planned').length
     />
   )
 }
+// app/dashboard/page.tsx - FIXED SERVER COMPONENT VERSION
