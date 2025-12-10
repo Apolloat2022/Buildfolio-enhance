@@ -14,6 +14,7 @@ interface Project {
   githubUrl?: string
   liveUrl?: string
   createdAt: Date
+  updatedAt: Date
 }
 
 interface StartedProject {
