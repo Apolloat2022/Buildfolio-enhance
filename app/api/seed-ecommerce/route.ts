@@ -5,13 +5,15 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     // Check if project exists
-    let project = await prisma.projectTemplate.findUnique({
+    const existingProject = await prisma.projectTemplate.findUnique({
       where: { slug: 'ecommerce-store' },
       include: { steps: true }
     })
 
-    if (!project) {
-      project = await prisma.projectTemplate.create({
+    let projectId: string
+
+    if (!existingProject) {
+      const newProject = await prisma.projectTemplate.create({
         data: {
           slug: 'ecommerce-store',
           title: 'Build an E-commerce Store',
@@ -23,17 +25,20 @@ export async function GET() {
           category: 'Full-Stack'
         }
       })
+      projectId = newProject.id
+    } else {
+      projectId = existingProject.id
     }
 
     // Delete existing steps to avoid duplicates
     await prisma.step.deleteMany({
-      where: { projectTemplateId: project.id }
+      where: { projectTemplateId: projectId }
     })
 
     // Create tutorial steps one by one
     const stepData = [
       {
-        projectTemplateId: project.id,
+        projectTemplateId: projectId,
         order: 1,
         title: 'Project Setup & Database Schema',
         description: 'Initialize your Next.js project and set up the database schema for products, users, and orders.',
@@ -53,7 +58,7 @@ export async function GET() {
         pitfalls: ['Make sure to add your DATABASE_URL to .env file', 'Run npx prisma generate after creating your schema']
       },
       {
-        projectTemplateId: project.id,
+        projectTemplateId: projectId,
         order: 2,
         title: 'Product Catalog Page',
         description: 'Build a responsive product grid that fetches and displays products from your database.',
@@ -69,7 +74,7 @@ export async function GET() {
         pitfalls: ['Remember to handle loading states', 'Add error boundaries for failed queries']
       },
       {
-        projectTemplateId: project.id,
+        projectTemplateId: projectId,
         order: 3,
         title: 'Shopping Cart Functionality',
         description: 'Implement add-to-cart functionality with state management and local storage persistence.',
@@ -85,7 +90,7 @@ export async function GET() {
         pitfalls: ['Use zustand or Context API for cart state', 'Persist cart to localStorage']
       },
       {
-        projectTemplateId: project.id,
+        projectTemplateId: projectId,
         order: 4,
         title: 'Stripe Payment Integration',
         description: 'Set up Stripe for secure payment processing with checkout sessions.',
@@ -101,7 +106,7 @@ export async function GET() {
         pitfalls: ['Never expose Stripe secret key in client code', 'Test with Stripe test cards first']
       },
       {
-        projectTemplateId: project.id,
+        projectTemplateId: projectId,
         order: 5,
         title: 'Order Management & Admin Dashboard',
         description: 'Create an admin panel to manage products and view orders.',
@@ -117,7 +122,7 @@ export async function GET() {
         pitfalls: ['Add authentication middleware to protect admin routes', 'Implement role-based access control']
       },
       {
-        projectTemplateId: project.id,
+        projectTemplateId: projectId,
         order: 6,
         title: 'Search & Filtering',
         description: 'Add search functionality and category filters to improve user experience.',
@@ -133,7 +138,7 @@ export async function GET() {
         pitfalls: ['Use URL search params for filters', 'Add debouncing to search input']
       },
       {
-        projectTemplateId: project.id,
+        projectTemplateId: projectId,
         order: 7,
         title: 'Deployment & Production Optimization',
         description: 'Deploy to Vercel and optimize for production with caching and CDN.',
@@ -160,11 +165,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       message: '✅ E-commerce tutorial seeded successfully!',
-      project: {
-        id: project.id,
-        slug: project.slug,
-        title: project.title
-      },
+      projectId: projectId,
+      slug: 'ecommerce-store',
       stepsCreated: createdSteps.length,
       steps: createdSteps.map(s => ({ order: s.order, title: s.title }))
     })
