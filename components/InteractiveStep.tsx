@@ -1,4 +1,4 @@
-// components/InteractiveStep.tsx
+// components/InteractiveStep.tsx - ENHANCED VERSION
 'use client'
 
 import { useState } from 'react'
@@ -11,6 +11,10 @@ interface InteractiveStepProps {
   codeSnippets?: Array<{ language: string; code: string }>
   pitfalls?: string[]
   estimatedTime: string
+  stepId: string
+  projectId: string
+  isCompleted: boolean // Added: server-driven completion state
+  onMarkComplete?: (stepId: string, projectId: string, isCompleted: boolean) => Promise<void> // Added: progress callback
 }
 
 export default function InteractiveStep({
@@ -19,17 +23,41 @@ export default function InteractiveStep({
   description,
   codeSnippets = [],
   pitfalls = [],
-  estimatedTime
+  estimatedTime,
+  stepId,
+  projectId,
+  isCompleted: initialCompleted,
+  onMarkComplete
 }: InteractiveStepProps) {
-  const [isCompleted, setIsCompleted] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(initialCompleted)
   const [showCode, setShowCode] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleMarkComplete = async () => {
+    if (!onMarkComplete) {
+      // Fallback: just toggle UI state
+      setIsCompleted(!isCompleted)
+      return
+    }
+
+    setLoading(true)
+    try {
+      await onMarkComplete(stepId, projectId, !isCompleted)
+      setIsCompleted(!isCompleted)
+    } catch (error) {
+      console.error('Error updating progress:', error)
+      alert('Failed to update progress. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className={`bg-white rounded-xl shadow-lg border-2 ${isCompleted ? 'border-green-200' : 'border-gray-200'} p-6 mb-6`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-start space-x-4">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${isCompleted ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-            {stepNumber}
+            {isCompleted ? '✓' : stepNumber}
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-bold text-gray-900">{title}</h3>
@@ -56,10 +84,19 @@ export default function InteractiveStep({
           </div>
         </div>
         <button
-          onClick={() => setIsCompleted(!isCompleted)}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${isCompleted ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
+          onClick={handleMarkComplete}
+          disabled={loading}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${isCompleted ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-blue-600 text-white hover:bg-blue-700'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          {isCompleted ? (
+          {loading ? (
+            <span className="flex items-center">
+              <svg className="animate-spin h-4 w-4 mr-2 text-current" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Saving...
+            </span>
+          ) : isCompleted ? (
             <>
               <svg className="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
