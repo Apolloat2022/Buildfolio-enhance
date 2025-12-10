@@ -88,9 +88,8 @@ export default function DashboardClient({
             <div className="flex-1">
               <p className="text-xl font-semibold">{session.user?.name}</p>
               <p className="text-gray-600">{session.user?.email}</p>
-             <p className="text-sm text-gray-500 mt-2">
-    Logged in via GitHub • Active member
-</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Logged in via GitHub • Active member
               </p>
             </div>
             <div className="text-right">
