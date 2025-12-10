@@ -1,6 +1,5 @@
-﻿// app/projects/[slug]/page.tsx - FIXED VERSION
+﻿// app/projects/[slug]/page.tsx - COMPLETELY CLEAN VERSION
 import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
 import { auth } from '@/app/auth'
 import InteractiveStep from '@/components/InteractiveStep'
 import ProgressTracker from '@/components/ProgressTracker'
@@ -45,14 +44,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               Tutorial Coming Soon!
             </h1>
             <p className="text-gray-600 mb-6">
-              The "{slug}" tutorial is being prepared. Check back soon!
+              The &quot;{slug}&quot; tutorial is being prepared. Check back soon!
             </p>
-            <a
+            <Link
               href="/projects"
               className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               ← Browse Available Tutorials
-            </a>
+            </Link>
           </div>
         </div>
       )
@@ -65,8 +64,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     const timeEstimateDisplay = project.timeEstimate || '25-30 hours'
     const resumeStars = project.resumeImpact || 5
     const technologies = project.technologies || []
-
-    // REMOVED THE ORPHANED CLOSING BRACE HERE
     
     return (
       <div className="min-h-screen bg-gray-50">
@@ -113,12 +110,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     <div className="text-lg font-bold text-blue-600">Sign in to track progress</div>
                     <div className="text-sm text-gray-500">Save your learning journey</div>
                   </div>
-                  <a
+                  <Link
                     href="/auth/signin"
                     className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                   >
                     Sign In
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
@@ -128,6 +125,13 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
+              {steps.length === 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                  <p className="text-yellow-800 font-medium">No tutorial steps available yet.</p>
+                  <p className="text-yellow-600 text-sm mt-2">This tutorial is being prepared. Check back soon!</p>
+                </div>
+              )}
+              
               {steps.map((step) => {
                 const isStepCompleted = completedSteps.includes(step.id)
                 
@@ -229,7 +233,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     </div>
                     <div className="text-center text-sm text-gray-600">
                       {completedSteps.length === 0 ? 'Start your first step!' :
-                       completedSteps.length < steps.length ? "Keep going! You're making steady progress." :
+                       completedSteps.length < steps.length ? 'Keep going! You are making steady progress.' :
                        '🎉 Congratulations! Project completed!'}
                     </div>
                   </>
@@ -237,12 +241,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   <div className="text-center py-4">
                     <div className="text-gray-400 text-3xl mb-2">🔒</div>
                     <p className="text-gray-600 mb-4">Sign in to track your progress</p>
-                    <a
+                    <Link
                       href="/auth/signin"
                       className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
                       Sign In
-                    </a>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -260,14 +264,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Tutorial</h1>
           <p className="text-gray-600 mb-6">
-            We're having trouble loading this tutorial. Please try another one.
+            We are having trouble loading this tutorial. Please try another one.
           </p>
-          <a
+          <Link
             href="/projects"
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             ← Back to All Tutorials
-          </a>
+          </Link>
         </div>
       </div>
     )
