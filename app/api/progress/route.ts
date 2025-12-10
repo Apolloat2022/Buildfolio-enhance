@@ -1,15 +1,14 @@
-// app/api/progress/route.ts - FIXED IMPORT
+// app/api/progress/route.ts - CORRECT IMPORTS FOR YOUR SETUP
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/auth'; // ✅ FIXED IMPORT PATH
+import { auth } from '@/app/auth'; // ✅ Use 'auth' from your auth.ts
 
 // GET: Fetch user progress for a project
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth(); // ✅ Use auth() directly
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) { // ✅ Use .id instead of .email since you have it
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,9 +19,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
     }
 
-    // Get user
+    // Get user - using userId from session
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
+      where: { id: session.user.id }
     });
     
     if (!user) {
@@ -62,9 +61,9 @@ export async function GET(request: NextRequest) {
 // POST: Update user progress
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth(); // ✅ Use auth() directly
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) { // ✅ Use .id from your session
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -74,9 +73,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get user
+    // Get user - using userId from session
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
+      where: { id: session.user.id }
     });
     
     if (!user) {
