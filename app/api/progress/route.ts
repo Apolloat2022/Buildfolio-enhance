@@ -1,8 +1,8 @@
-// app/api/progress/route.ts - UPDATED WITH GET METHOD
+// app/api/progress/route.ts - FIXED IMPORT
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions } from '@/app/auth'; // ✅ FIXED IMPORT PATH
 
 // GET: Fetch user progress for a project
 export async function GET(request: NextRequest) {
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Update user progress (YOUR EXISTING CODE)
+// POST: Update user progress
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
