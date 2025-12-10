@@ -1,4 +1,3 @@
-// app/projects/[slug]/page.tsx - COMPLETE WITH FIXED PROGRESS TRACKING
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { auth } from '@/app/auth'
@@ -19,7 +18,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     where: { slug },
     include: {
       steps: {
-        orderBy: { order: 'asc' }  // Fetch structured steps in order
+        orderBy: { order: 'asc' }
       },
       startedProjects: session?.user?.id ? {
         where: { userId: session.user.id }
@@ -33,12 +32,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const userStartedProject = project.startedProjects?.[0] || null
   const completedSteps = userStartedProject?.completedSteps || []
   const progress = userStartedProject?.progress || 0
+  const steps = project.steps || []
   
   // Use actual database fields
   const timeEstimateDisplay = project.timeEstimate || '25-30 hours'
   const resumeStars = project.resumeImpact || 5
   const technologies = project.technologies || []
-  const steps = project.steps || []  // REAL steps from database
 
   const getCodeSnippets = (codeSnippets: any): Array<{ language: string; code: string }> => {
     if (!codeSnippets) return []
@@ -82,7 +81,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </div>
             </div>
             
-            {/* PROGRESS TRACKER COMPONENT - FIXED */}
+            {/* PROGRESS TRACKER COMPONENT */}
             {session && (
               <ProgressTracker 
                 totalSteps={steps.length}
@@ -126,7 +125,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   codeSnippets={getCodeSnippets(step.codeSnippets)}
                   pitfalls={step.pitfalls || []}
                   estimatedTime={step.estimatedTime || 'Not specified'}
-                  // NEW PROPS FOR PROGRESS TRACKING:
                   stepId={step.id}
                   projectId={project.id}
                   isCompleted={isStepCompleted}
@@ -145,13 +143,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                       throw new Error('Failed to update progress');
                     }
                     
-                    // Trigger progress update for ProgressTracker
-                    const data = await response.json();
-                    window.dispatchEvent(new CustomEvent('progressUpdate', {
-                      detail: { completedCount: data.completedSteps?.length || 0 }
-                    }));
-                    
-                    // Refresh the page to update progress bar
+                    // Refresh the page to update progress
                     window.location.reload();
                   }}
                 />
@@ -205,7 +197,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </button>
             </div>
 
-            {/* Learning Progress (Mobile only - hidden on desktop) */}
+            {/* Learning Progress (Mobile only) */}
             <div className="bg-white rounded-xl shadow-lg p-6 lg:hidden">
               <h3 className="text-lg font-bold text-gray-900 mb-4">📊 Learning Progress</h3>
               {session ? (
