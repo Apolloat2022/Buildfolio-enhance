@@ -239,3 +239,18 @@ model Reply {
   
   @@index([questionId])
 }
+// Code Snippet Library
+model Snippet {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  code        String   @db.Text
+  language    String
+  category    String
+  tags        String[]
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  @@index([language])
+  @@index([category])
+}
