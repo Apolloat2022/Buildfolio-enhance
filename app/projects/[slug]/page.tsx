@@ -3,6 +3,7 @@ import { auth } from '@/app/auth'
 import Link from 'next/link'
 import MarkCompleteButton from '@/components/MarkCompleteButton'
 import StudyTimer from '@/components/StudyTimer'
+import StepQA from '@/components/StepQA'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -182,6 +183,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                         isCompleted={isCompleted}
                       />
                     )}
+
+                    {/* Q&A SECTION */}
+                    <StepQA stepId={step.id} isAuthenticated={!!session} />
                   </div>
                 )
               })}
