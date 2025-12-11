@@ -1,4 +1,4 @@
-import { auth } from '@/app/auth'
+﻿import { auth } from '@/app/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 
@@ -46,50 +46,6 @@ export default async function AdminPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-        {/* Export Buttons */}
-        <div className="flex gap-4 mb-8">
-          
-            <a
-          
-            href="/api/admin/export"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            ?? Export All Users (CSV)
-          </a>
-          
-          <div className="relative group">
-            <button className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
-              ?? Export Emails for Marketing
-            </button>
-            <div className="absolute top-full left-0 mt-2 w-64 bg-white shadow-lg rounded-lg p-2 hidden group-hover:block z-10">
-              <a href="/api/admin/export-emails?filter=all" className="block px-4 py-2 hover:bg-gray-100 rounded">
-                All Users
-              </a>
-              <a href="/api/admin/export-emails?filter=free-users" className="block px-4 py-2 hover:bg-gray-100 rounded">
-                Free Users Only
-              </a>
-              <a <a href="/api/admin/export-emails?filter=active-free" className="block px-4 py-2 hover:bg-gray-100 rounded">
-                Active Free Users (30 days)
-              </a>
-              <a href="/api/admin/export-emails?filter=completed-projects" className="block px-4 py-2 hover:bg-gray-100 rounded">
-                Users Who Completed Projects
-              </a>
-              <a href="/api/admin/export-emails?filter=trial-ending" className="block px-4 py-2 hover:bg-gray-100 rounded">
-                Trial Ending Soon
-              </a>
-            </div>
-          </div>
-          
-          
-            <a
-          
-          
-            href="/api/admin/export-emails?filter=active-free"
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
-          >
-            ?? Export Conversion Targets
-          </a>
-        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
@@ -164,5 +120,3 @@ export default async function AdminPage() {
     </div>
   )
 }
-
-

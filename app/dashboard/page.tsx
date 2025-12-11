@@ -1,4 +1,4 @@
-import { auth } from '@/app/auth'
+﻿import { auth } from '@/app/auth'
 import ExportResumeButton from '@/components/ExportResumeButton'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
@@ -26,26 +26,6 @@ export default async function DashboardPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Welcome back, {session.user.name || session.user.email}!</p>
-        {session.user.email === 'revanaglobal@gmail.com' && (
-          <div className="mb-4">
-            
-              href="/admin"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
-            >
-              ?? Admin Dashboard
-            </a>
-          </div>
-        )}
-        {session.user.email === 'revanaglobal@gmail.com' && (
-          <div className="mb-4">
-            
-              href="/admin"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
-            >
-              ?? Admin Dashboard
-            </a>
-          </div>
-        )}
         </div>
 
         {/* Gamification Dashboard */}
@@ -124,8 +104,6 @@ export default async function DashboardPage() {
     </div>
   )
 }
-
-
 
 
 
