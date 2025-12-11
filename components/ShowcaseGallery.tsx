@@ -183,7 +183,7 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
 
                 <div className="flex gap-2 mb-4">
                   {showcase.githubUrl && (
-                    
+                    <a
                       href={showcase.githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -194,7 +194,7 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
                     </a>
                   )}
                   {showcase.liveUrl && (
-                    
+                    <a
                       href={showcase.liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
