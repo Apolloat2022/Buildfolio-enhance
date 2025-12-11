@@ -36,6 +36,16 @@ export default async function DashboardPage() {
             </a>
           </div>
         )}
+        {session.user.email === 'revanaglobal@gmail.com' && (
+          <div className="mb-4">
+            
+              href="/admin"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
+            >
+              ?? Admin Dashboard
+            </a>
+          </div>
+        )}
         </div>
 
         {/* Gamification Dashboard */}
@@ -114,6 +124,7 @@ export default async function DashboardPage() {
     </div>
   )
 }
+
 
 
 
