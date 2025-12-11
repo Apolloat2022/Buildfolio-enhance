@@ -44,7 +44,6 @@ export default async function DashboardPage() {
               Browse All Projects
             </Link>
             <ExportResumeButton />
-            <ExportResumeButton />
           </div>
 
           {startedProjects.length === 0 ? (
@@ -99,6 +98,7 @@ export default async function DashboardPage() {
     </div>
   )
 }
+
 
 
 
