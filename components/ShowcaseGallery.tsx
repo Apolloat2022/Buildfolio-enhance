@@ -104,7 +104,7 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
   }
 
   return (
-    <div>
+    <>
       {showcases.length === 0 ? (
         <div className="text-center py-20 bg-gray-50 rounded-xl">
           <Award className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -128,14 +128,12 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
                 showcase.featured ? 'ring-4 ring-yellow-400' : ''
               }`}
             >
-              {/* Featured Badge */}
               {showcase.featured && (
                 <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-4 py-2 text-center">
                   ⭐ FEATURED PROJECT
                 </div>
               )}
 
-              {/* Image */}
               <div className="relative h-48 bg-gradient-to-br from-purple-400 to-blue-500">
                 {showcase.imageUrl ? (
                   <img
@@ -150,9 +148,7 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
                 )}
               </div>
 
-              {/* Content */}
               <div className="p-6">
-                {/* User Info */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                     {getInitials(showcase.user.name, showcase.user.email)}
@@ -167,13 +163,11 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
                   </div>
                 </div>
 
-                {/* Title & Description */}
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{showcase.title}</h3>
                 <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                   {showcase.description || 'No description provided.'}
                 </p>
 
-                {/* Tags */}
                 {showcase.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {showcase.tags.map((tag, idx) => (
@@ -187,7 +181,6 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
                   </div>
                 )}
 
-                {/* Links */}
                 <div className="flex gap-2 mb-4">
                   {showcase.githubUrl && (
                     
@@ -213,7 +206,6 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
                   )}
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center justify-between border-t pt-4">
                   <button
                     onClick={() => handleLike(showcase.id)}
@@ -238,7 +230,6 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
         </div>
       )}
 
-      {/* Comment Modal */}
       {selectedShowcase && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
@@ -252,7 +243,6 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
               </button>
             </div>
 
-            {/* Comments */}
             <div className="space-y-4 mb-6">
               {selectedShowcase.comments.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">No comments yet. Be the first!</p>
@@ -273,7 +263,6 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
               )}
             </div>
 
-            {/* Add Comment */}
             {isAuthenticated ? (
               <div>
                 <textarea
@@ -301,6 +290,6 @@ export default function ShowcaseGallery({ isAuthenticated }: ShowcaseGalleryProp
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
