@@ -1,4 +1,4 @@
-// app/api/progress/route.ts - UPDATED WITH STREAK INFO
+// app/api/progress/route.ts - FIXED BONUS POINTS BUG
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/app/auth'
 import { NextRequest, NextResponse } from 'next/server'
@@ -13,7 +13,6 @@ export async function POST(req: NextRequest) {
 
     const { stepId, projectId, action } = await req.json()
 
-    // Find or create started project
     let startedProject = await prisma.startedProject.findUnique({
       where: {
         userId_projectTemplateId: {
@@ -44,34 +43,37 @@ export async function POST(req: NextRequest) {
     }
 
     const currentCompleted = startedProject.completedSteps || []
+    const totalSteps = startedProject.projectTemplate.steps.length
     let newCompleted: string[]
     let pointsAwarded = 0
     let streakData = null
+
+    // Store old progress to check for completion
+    const oldProgress = Math.round((currentCompleted.length / totalSteps) * 100)
 
     if (action === 'complete' && !currentCompleted.includes(stepId)) {
       newCompleted = [...currentCompleted, stepId]
       pointsAwarded = 50
       
-      // Award points and update streak
       await awardPoints(session.user.id, pointsAwarded, 'Completed tutorial step')
       streakData = await updateUserStreak(session.user.id)
+      
+      // Calculate new progress
+      const newProgress = Math.round((newCompleted.length / totalSteps) * 100)
+      
+      // Award bonus ONLY when going from incomplete to complete (100%)
+      if (oldProgress < 100 && newProgress === 100) {
+        await awardPoints(session.user.id, 500, 'Completed full project!')
+        pointsAwarded += 500
+      }
     } else if (action === 'incomplete') {
       newCompleted = currentCompleted.filter(id => id !== stepId)
+      // No points for marking incomplete
     } else {
       newCompleted = currentCompleted
     }
 
-    const totalSteps = startedProject.projectTemplate.steps.length
     const newProgress = Math.round((newCompleted.length / totalSteps) * 100)
-
-    // Check if project just completed
-    const wasComplete = startedProject.progress === 100
-    const isNowComplete = newProgress === 100
-    
-    if (isNowComplete && !wasComplete) {
-      await awardPoints(session.user.id, 500, 'Completed full project!')
-      pointsAwarded += 500
-    }
 
     await prisma.startedProject.update({
       where: {
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
         progress: newProgress,
         status: newProgress === 100 ? 'completed' : 'in-progress',
         lastWorkedOn: new Date(),
-        completedAt: isNowComplete ? new Date() : null
+        completedAt: newProgress === 100 ? new Date() : null
       }
     })
 
