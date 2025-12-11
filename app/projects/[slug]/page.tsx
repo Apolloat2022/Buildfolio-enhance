@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/app/auth'
 import Link from 'next/link'
 import MarkCompleteButton from '@/components/MarkCompleteButton'
+import StudyTimer from '@/components/StudyTimer'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -84,6 +85,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
         <div className="max-w-7xl mx-auto p-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* LEFT COLUMN - Tutorial Steps */}
             <div className="lg:col-span-2 space-y-6">
               {steps.map((step) => {
                 const isCompleted = completedSteps.includes(step.id)
@@ -108,7 +110,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                       ⏱️ {step.estimatedTime || 'Not specified'}
                     </p>
 
-                    {/* VIDEO WALKTHROUGH */}
+                    {/* VIDEO */}
                     {step.videoUrl && (
                       <div className="mb-6">
                         <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -185,8 +187,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               })}
             </div>
 
-            {/* SIDEBAR */}
+            {/* RIGHT COLUMN - Sidebar */}
             <div className="space-y-6">
+              {/* STUDY TIMER */}
+              <StudyTimer />
+
+              {/* TECHNOLOGIES */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-bold mb-4">🛠️ Technologies</h3>
                 <div className="flex flex-wrap gap-2">
