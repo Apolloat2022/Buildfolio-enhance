@@ -1,4 +1,4 @@
-// app/api/progress/route.ts - UPDATED VERSION
+// app/api/progress/route.ts - UPDATED WITH STREAK INFO
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/app/auth'
 import { NextRequest, NextResponse } from 'next/server'
@@ -46,14 +46,15 @@ export async function POST(req: NextRequest) {
     const currentCompleted = startedProject.completedSteps || []
     let newCompleted: string[]
     let pointsAwarded = 0
+    let streakData = null
 
     if (action === 'complete' && !currentCompleted.includes(stepId)) {
       newCompleted = [...currentCompleted, stepId]
-      pointsAwarded = 50 // Base points for completing a step
+      pointsAwarded = 50
       
       // Award points and update streak
       await awardPoints(session.user.id, pointsAwarded, 'Completed tutorial step')
-      await updateUserStreak(session.user.id)
+      streakData = await updateUserStreak(session.user.id)
     } else if (action === 'incomplete') {
       newCompleted = currentCompleted.filter(id => id !== stepId)
     } else {
@@ -68,8 +69,8 @@ export async function POST(req: NextRequest) {
     const isNowComplete = newProgress === 100
     
     if (isNowComplete && !wasComplete) {
-      // Bonus points for completing entire project
       await awardPoints(session.user.id, 500, 'Completed full project!')
+      pointsAwarded += 500
     }
 
     await prisma.startedProject.update({
@@ -91,7 +92,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       progress: newProgress,
-      pointsAwarded
+      pointsAwarded,
+      newStreak: streakData?.currentStreak,
+      streakUpdated: !!streakData
     })
 
   } catch (error) {
