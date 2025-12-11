@@ -2,6 +2,7 @@
 import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
 import { renderToStream } from '@react-pdf/renderer'
+import { createElement } from 'react'
 import ResumePDF from '@/components/ResumePDF'
 
 export async function GET() {
@@ -60,7 +61,9 @@ export async function GET() {
       },
     }
 
-    const stream = await renderToStream(<ResumePDF data={resumeData} />)
+    // Use createElement instead of JSX
+    const pdfElement = createElement(ResumePDF, { data: resumeData })
+    const stream = await renderToStream(pdfElement)
 
     return new NextResponse(stream as any, {
       headers: {
