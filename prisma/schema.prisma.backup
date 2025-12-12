@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DIRECT_URL") // Changed from DATABASE_URL
+  url      = env("DIRECT_URL")
 }
 
 model User {
@@ -19,12 +19,26 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   
-  // Relations
-  accounts      Account[]
-  sessions      Session[]
-  projects      Project[]
-  subscriptions Subscription[]
-  startedProjects StartedProject[]
+  // Gamification fields
+  totalPoints      Int      @default(0)
+  currentStreak    Int      @default(0)
+  longestStreak    Int      @default(0)
+  lastActiveDate   DateTime?
+  level            Int      @default(1)
+  
+  // Relations  // Relations
+  accounts         Account[]
+  sessions         Session[]
+  projects         Project[]
+  subscriptions    Subscription[]
+  startedProjects  StartedProject[]
+  showcases        Showcase[]
+  showcaseComments ShowcaseComment[]
+  resumeProfile    ResumeProfile?
+  badges           UserBadge[]
+  achievements     Achievement[]
+  questions        Question[]
+  replies          Reply[]
 }
 
 model Account {
@@ -77,21 +91,26 @@ model Project {
   user        User     @relation(fields: [userId], references: [id])
 }
 
-// NEW: Step model for structured tutorial content
 model Step {
   id                String   @id @default(cuid())
-  order             Int      // Step number (1, 2, 3...)
+  order             Int
   title             String
   description       String?
-  codeSnippets      Json?    // Array of {language, code} objects
+  codeSnippets      Json?
   pitfalls          String[]
   estimatedTime     String?
+  
+  // Gamification fields
+  videoUrl         String?
+  hints            Json?
+  estimatedMinutes Int?
   
   // Relations
   projectTemplateId String
   projectTemplate   ProjectTemplate @relation(fields: [projectTemplateId], references: [id], onDelete: Cascade)
+  questions         Question[]
   
-  @@unique([projectTemplateId, order])  // Ensure unique ordering per template
+  @@unique([projectTemplateId, order])
   @@index([projectTemplateId])
 }
 
@@ -101,16 +120,11 @@ model ProjectTemplate {
   title           String
   description     String?
   difficulty      String   @default("beginner")
-  
-  // ACTUAL DATABASE COLUMNS (based on your Neon database)
   timeEstimate    String?
   technologies    String[]
   resumeImpact    Int?
   category        String?
-  
-  // UPDATED: Now a relation to Step model (replaces String[] steps)
-  steps           Step[]   // <- CHANGED FROM String[] to Step[]
-  
+  steps           Step[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
@@ -126,10 +140,15 @@ model StartedProject {
   projectTemplateId String
   status            String   @default("not-started")
   progress          Int      @default(0)
-  completedSteps    String[] @default([]) // ✅ ADDED: Tracks which step IDs are completed
+  completedSteps    String[] @default([])
   startedAt         DateTime @default(now())
   lastActivityAt    DateTime @default(now())
   completedAt       DateTime?
+  
+  // Gamification fields
+  timeSpentMinutes Int      @default(0)
+  lastWorkedOn     DateTime @default(now())
+  hintLevel        Int      @default(0)
   
   // Relations
   user            User            @relation(fields: [userId], references: [id])
@@ -149,6 +168,150 @@ model Subscription {
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String
+  icon        String
+  criteria    String
+  points      Int         @default(0)
+  createdAt   DateTime    @default(now())
+  
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id          String   @id @default(cuid())
+  userId      String
+  badgeId     String
+  unlockedAt  DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge       Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  points      Int
+  icon        String
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model Question {
+  id              String   @id @default(cuid())
+  stepId          String
+  userId          String
+  question        String   @db.Text
+  answer          String?  @db.Text
+  upvotes         Int      @default(0)
+  isAnswered      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  step            Step     @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  replies         Reply[]
+  
+  @@index([stepId])
+  @@index([userId])
+}
+
+model Reply {
+  id          String   @id @default(cuid())
+  questionId  String
+  userId      String
+  content     String   @db.Text
+  upvotes     Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([questionId])
+}
+// Code Snippet Library
+model Snippet {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  code        String   @db.Text
+  language    String
+  category    String
+  tags        String[]
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  @@index([language])
+  @@index([category])
+}
+// Project Showcase Gallery
+model Showcase {
+  id              String   @id @default(cuid())
+  userId          String
+  projectSlug     String
+  title           String
+  description     String?  @db.Text
+  imageUrl        String?
+  githubUrl       String?
+  liveUrl         String?
+  tags            String[]
+  likes           Int      @default(0)
+  featured        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments        ShowcaseComment[]
+  
+  @@index([userId])
+  @@index([projectSlug])
+  @@index([featured])
+}
+
+model ShowcaseComment {
+  id          String   @id @default(cuid())
+  showcaseId  String
+  userId      String
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  
+  showcase    Showcase @relation(fields: [showcaseId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([showcaseId])
+  @@index([userId])
+}
+model ResumeProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  phone               String?
+  location            String?
+  website             String?
+  linkedin            String?
+  github              String?
+  professionalSummary String?  @db.Text
+  workExperience      Json?
+  education           Json?
+  certifications      Json?
+  skills              Json?
+  languages           String[]
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
   
   @@index([userId])
 }
