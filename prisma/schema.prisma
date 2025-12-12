@@ -161,6 +161,20 @@ model StartedProject {
   @@unique([userId, projectTemplateId])
   @@index([userId])
   @@index([projectTemplateId])
+  
+  // GitHub Validation
+  githubRepoUrl      String?
+  repoValidatedAt    DateTime?
+  
+  // Showcase & Admin Approval
+  showcaseSubmitted  Boolean   @default(false)
+  adminReviewed      Boolean   @default(false)
+  adminApprovedAt    DateTime?
+  adminApprovedBy    String?
+  adminNotes         String?   @db.Text
+  
+  certificateEligible Boolean  @default(false)
+  certificateIssuedAt DateTime?
 }
 
 model Subscription {
@@ -365,3 +379,4 @@ model QuizAttempt {
   @@index([userId, stepId])
   @@index([userId])
 }
+
