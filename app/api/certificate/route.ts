@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
           .content {
             position: relative;
             z-index: 2;
-            padding: 50px 80px;
+            padding: 40px 70px 50px 70px;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 3px solid #1e3c72;
           }
@@ -161,12 +161,12 @@ export async function GET(req: NextRequest) {
           
           .title-section {
             text-align: center;
-            margin: 15px 0 25px 0;
+            margin: 12px 0 20px 0;
           }
           
           .main-title {
             font-family: 'Playfair Display', serif;
-            font-size: 58px;
+            font-size: 54px;
             color: #1e3c72;
             letter-spacing: 4px;
             margin-bottom: 8px;
@@ -188,10 +188,10 @@ export async function GET(req: NextRequest) {
           
           .recipient-name {
             font-family: 'Great Vibes', cursive;
-            font-size: 64px;
+            font-size: 60px;
             color: #1e3c72;
             text-align: center;
-            margin: 20px 0;
+            margin: 18px 0;
             line-height: 1;
           }
           
@@ -201,7 +201,7 @@ export async function GET(req: NextRequest) {
             color: #333;
             line-height: 1.8;
             max-width: 850px;
-            margin: 0 auto 18px;
+            margin: 0 auto 15px;
             padding: 15px;
             background: rgba(255,255,255,0.95);
           }
@@ -215,7 +215,7 @@ export async function GET(req: NextRequest) {
             text-align: center;
             font-size: 13px;
             color: #666;
-            margin: 15px 0;
+            margin: 12px 0;
             font-style: italic;
           }
           
@@ -226,7 +226,7 @@ export async function GET(req: NextRequest) {
           
           .technologies {
             text-align: center;
-            margin: 15px 0;
+            margin: 12px 0;
           }
           
           .tech-badge {
@@ -391,3 +391,4 @@ export async function GET(req: NextRequest) {
     return new NextResponse('Error generating certificate', { status: 500 })
   }
 }
+
