@@ -168,6 +168,7 @@ model StartedProject {
   
   // Showcase & Admin Approval
   showcaseSubmitted  Boolean   @default(false)
+  showcaseId         String?
   adminReviewed      Boolean   @default(false)
   adminApprovedAt    DateTime?
   adminApprovedBy    String?
@@ -379,4 +380,5 @@ model QuizAttempt {
   @@index([userId, stepId])
   @@index([userId])
 }
+
 
