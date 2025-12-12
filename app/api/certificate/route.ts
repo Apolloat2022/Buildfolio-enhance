@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -64,31 +64,59 @@ export async function GET(req: NextRequest) {
             overflow: hidden;
           }
           
-          /* Decorative stripes - moved to not block text */
-          .stripe-top {
+          /* Smaller decorative corner accents - won't block content */
+          .corner-accent-top {
             position: absolute;
             top: 0;
             right: 0;
-            width: 400px;
-            height: 200px;
-            background: linear-gradient(135deg, #1e3c72 0%, #1e3c72 60%, #d4af37 60%, #d4af37 70%, transparent 70%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 150px 150px 0;
+            border-color: transparent #1e3c72 transparent transparent;
             z-index: 1;
           }
           
-          .stripe-bottom {
+          .corner-accent-top::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: -135px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 100px 100px 0;
+            border-color: transparent #d4af37 transparent transparent;
+          }
+          
+          .corner-accent-bottom {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 400px;
-            height: 200px;
-            background: linear-gradient(135deg, #d4af37 0%, #d4af37 30%, #1e3c72 30%, #1e3c72 90%, transparent 90%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 150px 0 0 150px;
+            border-color: transparent transparent transparent #d4af37;
             z-index: 1;
+          }
+          
+          .corner-accent-bottom::after {
+            content: '';
+            position: absolute;
+            bottom: 15px;
+            left: -135px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 100px 0 0 100px;
+            border-color: transparent transparent transparent #1e3c72;
           }
           
           .content {
             position: relative;
             z-index: 2;
-            padding: 60px 80px;
+            padding: 50px 80px;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -98,39 +126,42 @@ export async function GET(req: NextRequest) {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 3px solid #1e3c72;
           }
           
           .apollo-logo {
-            width: 200px;
+            width: 280px;
             height: auto;
           }
           
-          .buildfolio-text {
-            text-align: right;
+          .buildfolio-box {
+            text-align: center;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
           }
           
-          .logo {
-            font-size: 28px;
+          .buildfolio-title {
+            font-size: 32px;
             font-weight: 700;
-            color: #1e3c72;
             font-family: 'Playfair Display', serif;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
           }
           
-          .logo-sub {
-            font-size: 11px;
-            color: #667eea;
+          .buildfolio-sub {
+            font-size: 10px;
             letter-spacing: 2px;
             text-transform: uppercase;
             margin-top: 3px;
+            opacity: 0.9;
           }
           
           .title-section {
             text-align: center;
-            margin: 20px 0 30px 0;
+            margin: 15px 0 25px 0;
           }
           
           .main-title {
@@ -142,7 +173,7 @@ export async function GET(req: NextRequest) {
           }
           
           .subtitle {
-            font-size: 16px;
+            font-size: 15px;
             color: #666;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -150,9 +181,9 @@ export async function GET(req: NextRequest) {
           
           .presented-to {
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
             color: #666;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
           }
           
           .recipient-name {
@@ -160,19 +191,19 @@ export async function GET(req: NextRequest) {
             font-size: 64px;
             color: #1e3c72;
             text-align: center;
-            margin: 25px 0;
+            margin: 20px 0;
             line-height: 1;
           }
           
           .completion-text {
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
             color: #333;
             line-height: 1.8;
-            max-width: 800px;
-            margin: 0 auto 20px;
-            background: white;
-            padding: 20px;
+            max-width: 850px;
+            margin: 0 auto 18px;
+            padding: 15px;
+            background: rgba(255,255,255,0.95);
           }
           
           .project-name {
@@ -180,19 +211,32 @@ export async function GET(req: NextRequest) {
             color: #c41e3a;
           }
           
+          .earned-at {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin: 15px 0;
+            font-style: italic;
+          }
+          
+          .buildfolio-highlight {
+            font-weight: 700;
+            color: #1e3c72;
+          }
+          
           .technologies {
             text-align: center;
-            margin: 20px 0;
+            margin: 15px 0;
           }
           
           .tech-badge {
             display: inline-block;
             background: linear-gradient(135deg, #1e3c72, #667eea);
             color: white;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 20px;
-            margin: 4px;
-            font-size: 11px;
+            margin: 3px;
+            font-size: 10px;
             letter-spacing: 1px;
           }
           
@@ -201,7 +245,8 @@ export async function GET(req: NextRequest) {
             justify-content: space-around;
             align-items: flex-end;
             margin-top: auto;
-            padding-top: 20px;
+            padding-top: 15px;
+            background: white;
           }
           
           .signature-section {
@@ -263,6 +308,8 @@ export async function GET(req: NextRequest) {
             font-size: 9px;
             color: #999;
             z-index: 3;
+            background: white;
+            padding: 5px;
           }
           
           @media print {
@@ -273,15 +320,15 @@ export async function GET(req: NextRequest) {
       </head>
       <body>
         <div class="certificate">
-          <div class="stripe-top"></div>
-          <div class="stripe-bottom"></div>
+          <div class="corner-accent-top"></div>
+          <div class="corner-accent-bottom"></div>
           
           <div class="content">
             <div class="header">
               <img src="/images/logo.png" alt="Apollo Technologies" class="apollo-logo" />
-              <div class="buildfolio-text">
-                <div class="logo">BUILDFOLIO</div>
-                <div class="logo-sub">Professional Development</div>
+              <div class="buildfolio-box">
+                <div class="buildfolio-title">BUILDFOLIO</div>
+                <div class="buildfolio-sub">Certificate Platform</div>
               </div>
             </div>
             
@@ -298,6 +345,10 @@ export async function GET(req: NextRequest) {
               We give this certificate because <span class="project-name">${startedProject.user.name || startedProject.user.email}</span> has completed the 
               <span class="project-name">"${startedProject.projectTemplate.title}"</span> project and passed all assessments,
               demonstrating proficiency in full-stack development and software engineering best practices.
+            </div>
+            
+            <div class="earned-at">
+              Certificate earned through <span class="buildfolio-highlight">BuildFolio.tech</span> platform
             </div>
             
             <div class="technologies">
@@ -340,4 +391,3 @@ export async function GET(req: NextRequest) {
     return new NextResponse('Error generating certificate', { status: 500 })
   }
 }
-
