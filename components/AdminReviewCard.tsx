@@ -99,6 +99,7 @@ export default function AdminReviewCard({ submission }: AdminReviewCardProps) {
     }
   }
 
+
   const estimatedHours = Math.round(submission.timeSpentMinutes / 60)
 
   return (
@@ -222,4 +223,5 @@ export default function AdminReviewCard({ submission }: AdminReviewCardProps) {
     </div>
   )
 }
+
 
