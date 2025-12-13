@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         'X-Title': 'BuildFolio'
       },
       body: JSON.stringify({
-        model: 'google/gemma-2-9b-it:free',
+        model: 'openai/gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: question }
@@ -75,4 +75,5 @@ export async function POST(req: NextRequest) {
     })
   }
 }
+
 
