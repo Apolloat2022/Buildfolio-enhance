@@ -19,12 +19,12 @@ export default function GlobalAIHelper() {
     
     setLoading(true)
     try {
-      const res = await fetch('/api/ai/help', {
+      const res = await fetch('/api/ai/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           question,
-          context: 'general'
+          stepId: "general" // Temporary - we can make this dynamic later
         })
       })
       
@@ -51,4 +51,5 @@ export default function GlobalAIHelper() {
     </div>
   )
 }
+
 
