@@ -1,9 +1,10 @@
-﻿import type { Metadata } from "next"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import ToastContainer from "@/components/ToastContainer"
 import CertificateFloatingButton from "@/components/CertificateFloatingButton"
 import GlobalAIHelper from "@/components/GlobalAIHelper"
+import Navigation from "@/components/Navigation"
 import { SessionProvider } from "next-auth/react"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <SessionProvider>
+          <Navigation />
           <ToastContainer />
           <CertificateFloatingButton />
           <GlobalAIHelper />
@@ -31,3 +33,4 @@ export default function RootLayout({
     </html>
   )
 }
+
