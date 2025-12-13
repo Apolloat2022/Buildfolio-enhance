@@ -40,6 +40,21 @@ model User {
   questions        Question[]
   replies          Reply[]
   quizAttempts     QuizAttempt[]
+  aiUsage       AIUsage[]
+}
+
+model AIUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stepId    String
+  question  String   @db.Text
+  answer    String   @db.Text
+  provider  String   @default("groq")
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Account {
@@ -380,5 +395,6 @@ model QuizAttempt {
   @@index([userId, stepId])
   @@index([userId])
 }
+
 
 
