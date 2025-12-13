@@ -65,7 +65,21 @@ export async function POST(req: NextRequest) {
       if (oldProgress < 100 && newProgress === 100) {
         await awardPoints(session.user.id, 500, 'Completed full project!')
         pointsAwarded += 500
-      }
+      
+        
+        // Auto-enable certificate at 100% completion
+        await prisma.startedProject.update({
+          where: {
+            userId_projectTemplateId: {
+              userId: session.user.id,
+              projectTemplateId: projectId
+            }
+          },
+          data: {
+            certificateEligible: true,
+            certificateIssuedAt: new Date()
+          }
+        })}
     } else if (action === 'incomplete') {
       newCompleted = currentCompleted.filter(id => id !== stepId)
       // No points for marking incomplete
