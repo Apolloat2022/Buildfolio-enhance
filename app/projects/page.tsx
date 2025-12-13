@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { auth } from '@/app/auth'
 
@@ -12,7 +12,7 @@ export default async function ProjectsPage() {
         select: { startedProjects: true }
       }
     },
-    orderBy: { order: 'asc' }
+    orderBy: { createdAt: 'asc' }
   })
 
   return (
@@ -40,7 +40,7 @@ export default async function ProjectsPage() {
               <div className="card-modern h-full flex flex-col group">
                 {/* Project Icon */}
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
-                  {project.icon || '🚀'}
+                  {project.icon || '??'}
                 </div>
 
                 {/* Title & Description */}
@@ -54,11 +54,11 @@ export default async function ProjectsPage() {
                 {/* Stats */}
                 <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
                   <div className="flex items-center gap-1">
-                    <span>📚</span>
+                    <span>??</span>
                     <span>{project.steps.length} steps</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span>👥</span>
+                    <span>??</span>
                     <span>{project._count.startedProjects} started</span>
                   </div>
                 </div>
@@ -89,7 +89,7 @@ export default async function ProjectsPage() {
         {/* No Projects State */}
         {projects.length === 0 && (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">📦</div>
+            <div className="text-6xl mb-4">??</div>
             <h3 className="text-2xl font-bold text-white mb-2">No Projects Yet</h3>
             <p className="text-gray-400">Check back soon for new projects!</p>
           </div>
@@ -98,3 +98,4 @@ export default async function ProjectsPage() {
     </div>
   )
 }
+
