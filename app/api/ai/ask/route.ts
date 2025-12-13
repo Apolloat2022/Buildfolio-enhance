@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'openai/gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: question }
@@ -74,3 +74,4 @@ export async function POST(req: NextRequest) {
     })
   }
 }
+
