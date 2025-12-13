@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import ToastContainer from "@/components/ToastContainer"
-import CertificateFloatingButton from "@/components/CertificateFloatingButton"
+import CertificateFloatingButton
+import GlobalAIHelper from "@/components/GlobalAIHelper" from "@/components/CertificateFloatingButton"
 import { SessionProvider } from "next-auth/react"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -23,9 +24,11 @@ export default function RootLayout({
         <SessionProvider>
           <ToastContainer />
           <CertificateFloatingButton />
+          <GlobalAIHelper />
           {children}
         </SessionProvider>
       </body>
     </html>
   )
 }
+
