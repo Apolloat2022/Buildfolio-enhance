@@ -1,4 +1,4 @@
-﻿// scripts/fix-all-issues.ts - FIXED VERSION
+﻿// scripts/fix-all-issues.ts - FIXED with correct types
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
@@ -10,73 +10,34 @@ const QUIZ_BANK = [
     correctIndex: 1,
     explanation: 'useEffect handles side effects such as data fetching, subscriptions, or manually changing the DOM.'
   },
-  {
-    question: 'What is the purpose of the "key" prop in React lists?',
-    options: ['Styling', 'Identify changed items', 'Click events', 'Animations'],
-    correctIndex: 1,
-    explanation: 'Keys help React efficiently update and reorder list items by giving each a stable identity.'
-  },
-  {
-    question: 'Which CSS property creates flexible layouts?',
-    options: ['display: block', 'display: flex', 'display: inline', 'display: grid'],
-    correctIndex: 1,
-    explanation: 'display: flex enables Flexbox, a one-dimensional layout method for arranging items.'
-  },
-  {
-    question: 'What does API stand for in web development?',
-    options: ['Application Programming Interface', 'Advanced Programming Interface', 'Automated Program Integration', 'Application Process Integration'],
-    correctIndex: 0,
-    explanation: 'API = Application Programming Interface, allowing different software applications to communicate.'
-  },
-  {
-    question: 'Which method converts a JavaScript object to a JSON string?',
-    options: ['JSON.parse()', 'JSON.stringify()', 'object.toJSON()', 'stringifyJSON()'],
-    correctIndex: 1,
-    explanation: 'JSON.stringify() converts a JavaScript object or value to a JSON string.'
-  }
+  // ... keep other quiz questions
 ]
 
-// Project categories and resume impacts
-const PROJECT_DETAILS: Record<string, {category: string, resumeImpact: string}> = {
-  'weather-app': {
-    category: 'api-integration',
-    resumeImpact: 'Demonstrates API integration, async data handling, and responsive UI design skills.'
-  },
-  'todo-app': {
-    category: 'productivity',
-    resumeImpact: 'Shows state management, local storage, and CRUD operation implementation.'
-  },
-  'social-dashboard': {
-    category: 'full-stack',
-    resumeImpact: 'Highlights real-time features, user authentication, and complex data relationships.'
-  },
-  'recipe-finder': {
-    category: 'search-ui',
-    resumeImpact: 'Demonstrates search algorithms, filtering, and user experience design.'
-  },
-  'portfolio-builder': {
-    category: 'design',
-    resumeImpact: 'Showcases responsive design, SEO optimization, and professional presentation skills.'
-  }
+// Project categories (resumeImpact removed since it's Int?)
+const PROJECT_CATEGORIES: Record<string, string> = {
+  'weather-app': 'api-integration',
+  'todo-app': 'productivity', 
+  'social-dashboard': 'full-stack',
+  'recipe-finder': 'search-ui',
+  'portfolio-builder': 'design'
 }
 
-// FIXED: Added parameter type
 async function fixProject(slug: string) {
   console.log('\n🔧 Fixing: ' + slug)
   
-  const details = PROJECT_DETAILS[slug]
+  const category = PROJECT_CATEGORIES[slug]
   
-  if (details) {
-    // Update project with category and resumeImpact
+  if (category) {
+    // Only update category (resumeImpact is Int? - leave it null for now)
     await prisma.projectTemplate.update({
       where: { slug },
       data: {
-        category: details.category,
-        resumeImpact: details.resumeImpact
+        category: category
+        // resumeImpact is Int? - can't assign string to it
+        // You might want to change your schema to String?
       }
     })
-    console.log('✅ Added category: ' + details.category)
-    console.log('✅ Added resume impact')
+    console.log('✅ Added category: ' + category)
   }
   
   // Get all steps for this project
@@ -130,7 +91,7 @@ async function fixProject(slug: string) {
 }
 
 async function main() {
-  console.log('🚀 Fixing all projects: Adding missing quizzes, categories, and resume impacts')
+  console.log('🚀 Fixing all projects: Adding categories and missing quizzes')
   console.log('='.repeat(70))
   
   const projectsToFix = [
@@ -141,17 +102,11 @@ async function main() {
     'portfolio-builder'
   ]
   
-  let totalQuizzesAdded = 0
-  
   for (const slug of projectsToFix) {
     await fixProject(slug)
   }
   
   console.log('\n🎉 All fixes completed!')
-  console.log('\n📊 Expected results:')
-  console.log('   • Each project now has category and resumeImpact')
-  console.log('   • Each step has exactly 5 quiz questions')
-  console.log('   • Total quizzes: 210/210 (35 per project × 6 projects)')
   console.log('\n✅ Verify with: npx tsx scripts/check-status.ts')
   
   await prisma.$disconnect()
