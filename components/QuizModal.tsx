@@ -9,6 +9,11 @@ interface QuizModalProps {
   onClose: () => void
   stepId: string
   stepTitle: string
+  onQuizComplete?: (passed: boolean) => void
+  isOpen: boolean
+  onClose: () => void
+  stepId: string
+  stepTitle: string
 }
 
 interface QuizQuestion {
@@ -73,6 +78,11 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
     setScore(correctCount)
     setIsSubmitted(true)
 
+      // Call callback if provided
+    if (props.onQuizComplete) {
+      props.onQuizComplete(correctCount >= Math.ceil(questions.length * 0.8))
+    }
+    
     // Submit results to server
     fetch("/api/quiz/submit", {
       method: "POST",
