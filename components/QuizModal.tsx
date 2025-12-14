@@ -1,99 +1,401 @@
 ﻿"use client"
-import { useState, useEffect } from 'react'
+
+import { useState, useEffect, useCallback } from 'react'
+import { X, Check, XCircle, HelpCircle } from 'lucide-react'
 
 interface QuizQuestion {
   id: string
   question: string
   options: string[]
   correctIndex: number
-  explanation?: string | null
+  explanation: string | null
 }
 
 interface QuizModalProps {
   stepId: string
-  isOpen: boolean
-  onClose: () => void
+  questions: QuizQuestion[]
   onPass: () => void
+  onClose: () => void
 }
 
-export default function QuizModal({ stepId, isOpen, onClose, onPass }: QuizModalProps) {
-  const [questions, setQuestions] = useState<QuizQuestion[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [showExplanation, setShowExplanation] = useState(false)
+export default function QuizModal({ stepId, questions, onPass, onClose }: QuizModalProps) {
+  const [isMounted, setIsMounted] = useState(false)
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>(new Array(questions.length).fill(-1))
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const [score, setScore] = useState(0)
-  const [completed, setCompleted] = useState(false)
+  
+  // Track if we're processing a click to prevent double selection
+  const [isProcessingClick, setIsProcessingClick] = useState(false)
+  
+  useEffect(() => {
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
+
+  // Handle answer selection with proper event handling
+  const handleSelectAnswer = useCallback((questionIndex: number, optionIndex: number, e: React.MouseEvent) => {
+    // CRITICAL: Stop event bubbling and prevent default
+    e.preventDefault()
+    e.stopPropagation()
+    
+    // Prevent multiple rapid clicks
+    if (isProcessingClick || isSubmitted) return
+    
+    setIsProcessingClick(true)
+    
+    console.log(`Selected answer: Q${questionIndex + 1}, Option ${optionIndex}`)
+    
+    // Use functional update to ensure we have latest state
+    setSelectedAnswers(prev => {
+      const newAnswers = [...prev]
+      newAnswers[questionIndex] = optionIndex
+      return newAnswers
+    })
+    
+    // Reset processing flag after a short delay
+    setTimeout(() => {
+      setIsProcessingClick(false)
+    }, 100)
+  }, [isProcessingClick, isSubmitted])
+
+  // Separate handler for option button that handles the event properly
+  const handleOptionClick = useCallback((questionIndex: number, optionIndex: number) => {
+    return (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
+      if (isProcessingClick || isSubmitted) return
+      
+      console.log(`Option ${optionIndex} clicked for question ${questionIndex}`)
+      handleSelectAnswer(questionIndex, optionIndex, e)
+    }
+  }, [handleSelectAnswer, isProcessingClick, isSubmitted])
+
+  function handleSubmit() {
+    if (selectedAnswers.some(answer => answer === -1)) {
+      alert("Please answer all questions before submitting!")
+      return
+    }
+
+    let correctCount = 0
+    selectedAnswers.forEach((answer, index) => {
+      if (answer === questions[index].correctIndex) {
+        correctCount++
+      }
+    })
+
+    setScore(correctCount)
+    setIsSubmitted(true)
+
+    fetch("/api/quiz/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        stepId,
+        answers: selectedAnswers,
+        score: correctCount,
+        passed: correctCount >= Math.ceil(questions.length * 0.8)
+      })
+    }).then(response => {
+      if (response.ok) {
+        console.log("Quiz results submitted")
+      }
+    })
+  }
+
+  function handleReset() {
+    setCurrentQuestion(0)
+    setSelectedAnswers(new Array(questions.length).fill(-1))
+    setIsSubmitted(false)
+    setScore(0)
+  }
+
+  function handleNext() {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1)
+    }
+  }
+
+  function handlePrev() {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1)
+    }
+  }
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Optional: Add keyboard navigation
+    if (e.key === 'ArrowLeft') handlePrev()
+    if (e.key === 'ArrowRight') handleNext()
+    if (e.key >= '1' && e.key <= '4' && !isSubmitted) {
+      const optionIndex = parseInt(e.key) - 1
+      handleSelectAnswer(currentQuestion, optionIndex, e as any)
+    }
+  }, [currentQuestion, handleSelectAnswer, isSubmitted])
 
   useEffect(() => {
-    if (!isOpen) return
-    
-    async function fetchQuestions() {
-      try {
-        setLoading(true)
-        const res = await fetch(`/api/quiz/questions?stepId=${stepId}`)
-        const data = await res.json()
-        
-        if (data.questions && Array.isArray(data.questions)) {
-          setQuestions(data.questions)
-        } else {
-          setQuestions([])
-        }
-      } catch (error) {
-        console.error('Failed to load quiz:', error)
-        setQuestions([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    fetchQuestions()
-  }, [stepId, isOpen])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
 
-  if (!isOpen) return null
-
-  if (loading) {
-    return (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="bg-white rounded-lg p-8"><div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div><p className="mt-4 text-gray-700">Loading quiz...</p></div></div>)
+  // Don't render until mounted
+  if (!isMounted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+        <div className="bg-white rounded-xl p-6 max-w-md w-full">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading quiz...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!questions || questions.length === 0) {
-    return (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="bg-white rounded-lg p-8 max-w-md"><h3 className="text-xl font-bold mb-4">No Quiz Available</h3><p className="text-gray-600 mb-4">This step doesn't have quiz questions yet.</p><button onClick={onClose} className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Close</button></div></div>)
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+        <div className="bg-white rounded-xl p-6 max-w-md w-full">
+          <div className="text-center">
+            <div className="text-5xl mb-4">❌</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Quiz Available</h3>
+            <p className="text-gray-600 mb-4">
+              This step doesn&apos;t have quiz questions configured yet.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
+            >
+              Close Quiz
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  const currentQuestion = questions[currentIndex]
+  const currentQuiz = questions[currentQuestion]
   const totalQuestions = questions.length
-  const passThreshold = Math.ceil(totalQuestions * 0.8)
+  const passed = score >= Math.ceil(totalQuestions * 0.8)
+  const allAnswered = selectedAnswers.every(answer => answer !== -1)
 
-  const handleAnswer = (index: number) => {
-    setSelectedAnswer(index)
-    setShowExplanation(true)
-    if (index === currentQuestion.correctIndex) {
-      setScore(score + 1)
-    }
+  if (isSubmitted && passed && onPass) {
+    setTimeout(() => {
+      onPass()
+    }, 1500)
   }
 
-  const handleNext = () => {
-    if (currentIndex < totalQuestions - 1) {
-      setCurrentIndex(currentIndex + 1)
-      setSelectedAnswer(null)
-      setShowExplanation(false)
-    } else {
-      setCompleted(true)
-    }
-  }
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+      onClick={(e) => {
+        // Close on backdrop click
+        if (e.target === e.currentTarget) {
+          onClose()
+        }
+      }}
+    >
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl">
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b bg-white/95">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Step Quiz</h2>
+            <p className="text-gray-700 mt-1">Answer all questions to complete this step</p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
-  const handleRetry = () => {
-    setCurrentIndex(0)
-    setSelectedAnswer(null)
-    setShowExplanation(false)
-    setScore(0)
-    setCompleted(false)
-  }
+        {/* Progress */}
+        <div className="px-6 pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">
+              Question {currentQuestion + 1} of {totalQuestions}
+            </span>
+            {isSubmitted && (
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${passed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                {passed ? "Passed" : "Failed"} ({score}/{totalQuestions})
+              </span>
+            )}
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-600 transition-all duration-300"
+              style={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
+            />
+          </div>
+        </div>
 
-  if (completed) {
-    const passed = score >= passThreshold
-    return (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="bg-white rounded-lg p-8 max-w-md"><h3 className="text-2xl font-bold mb-4">{passed ? '🎉 Quiz Passed!' : '❌ Not Quite'}</h3><p className="text-xl mb-4">Score: {score}/{totalQuestions}</p><p className="text-gray-600 mb-6">{passed ? `Great job! You got ${score} out of ${totalQuestions} correct.` : `You need ${passThreshold} correct to pass. You got ${score}.`}</p><div className="flex gap-4">{passed ? (<button onClick={() => { onPass(); onClose(); }} className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Continue</button>) : (<button onClick={handleRetry} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Retry Quiz</button>)}<button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Close</button></div></div></div>)
-  }
+        {/* Content */}
+        <div className="p-6">
+          {/* Question */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 leading-relaxed">
+              {currentQuiz?.question}
+            </h3>
+            
+            {/* Options - CRITICAL FIX: Add onMouseDown to prevent double events */}
+            <div className="space-y-3">
+              {currentQuiz?.options.map((option, optionIndex) => {
+                const isSelected = selectedAnswers[currentQuestion] === optionIndex
+                const isCorrect = optionIndex === currentQuiz.correctIndex
+                const showResults = isSubmitted
+                
+                let optionStyle = "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                let textStyle = "text-gray-800"
+                
+                if (showResults) {
+                  if (isCorrect) {
+                    optionStyle = "border-green-500 bg-green-50"
+                    textStyle = "text-green-900"
+                  } else if (isSelected && !isCorrect) {
+                    optionStyle = "border-red-500 bg-red-50"
+                    textStyle = "text-red-900"
+                  } else {
+                    optionStyle = "border-gray-200 bg-gray-50"
+                    textStyle = "text-gray-600"
+                  }
+                } else if (isSelected) {
+                  optionStyle = "border-blue-500 bg-blue-50"
+                  textStyle = "text-blue-900"
+                }
+                
+                return (
+                  <div
+                    key={optionIndex}
+                    className="relative"
+                  >
+                    <button
+                      onMouseDown={(e) => {
+                        // Prevent default browser behavior
+                        e.preventDefault()
+                      }}
+                      onClick={handleOptionClick(currentQuestion, optionIndex)}
+                      disabled={isSubmitted || isProcessingClick}
+                      className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${optionStyle} ${
+                        !isSubmitted && !isProcessingClick 
+                          ? "cursor-pointer active:scale-[0.99]" 
+                          : "cursor-default"
+                      } select-none`}
+                    >
+                      <div className="flex items-start">
+                        <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 mt-0.5 mr-3 flex items-center justify-center ${
+                          isSelected ? "border-blue-600 bg-blue-600" : "border-gray-300"
+                        }`}>
+                          {showResults && isCorrect && (
+                            <Check size={14} className="text-white" />
+                          )}
+                          {showResults && isSelected && !isCorrect && (
+                            <XCircle size={14} className="text-white" />
+                          )}
+                        </div>
+                        <div>
+                          <span className={`font-medium ${textStyle}`}>
+                            {String.fromCharCode(65 + optionIndex)}. {option}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    {/* Debug: Show click status */}
+                    {isProcessingClick && isSelected && (
+                      <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-ping"></div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
-  return (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"><div className="mb-6"><div className="flex justify-between items-center mb-2"><span className="text-sm text-gray-600">Question {currentIndex + 1} of {totalQuestions}</span><span className="text-sm text-gray-600">Score: {score}/{totalQuestions}</span></div><div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-600 h-2 rounded-full transition-all" style={{width: `${((currentIndex + 1) / totalQuestions) * 100}%`}}></div></div></div><h3 className="text-xl font-bold mb-6">{currentQuestion.question}</h3><div className="space-y-3 mb-6">{currentQuestion.options.map((option, index) => {const isSelected = selectedAnswer === index; const isCorrect = index === currentQuestion.correctIndex; const showCorrect = showExplanation && isCorrect; const showWrong = showExplanation && isSelected && !isCorrect; return (<button key={index} onClick={() => !showExplanation && handleAnswer(index)} disabled={showExplanation} className={`w-full p-4 text-left rounded-lg border-2 transition-all ${showCorrect ? 'bg-green-100 border-green-500' : showWrong ? 'bg-red-100 border-red-500' : isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'} ${showExplanation ? 'cursor-not-allowed' : 'cursor-pointer'}`}><span className="font-medium">{option}</span></button>)})}</div>{showExplanation && currentQuestion.explanation && (<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"><p className="text-sm text-blue-900"><strong>Explanation:</strong> {currentQuestion.explanation}</p></div>)}<div className="flex gap-4">{showExplanation && (<button onClick={handleNext} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">{currentIndex < totalQuestions - 1 ? 'Next Question' : 'Finish Quiz'}</button>)}<button onClick={onClose} className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Close</button></div></div></div>)
+          {/* Explanation */}
+          {isSubmitted && currentQuiz?.explanation && (
+            <div className="p-4 mb-6 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-start">
+                <HelpCircle className="flex-shrink-0 w-5 h-5 text-blue-600 mr-2 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-1">Explanation</h4>
+                  <p className="text-blue-800">{currentQuiz.explanation}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-between items-center pt-6 border-t">
+            <div className="flex space-x-3">
+              <button
+                onClick={handlePrev}
+                disabled={currentQuestion === 0}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  currentQuestion === 0
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={currentQuestion === totalQuestions - 1}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  currentQuestion === totalQuestions - 1
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+
+            <div className="flex space-x-3">
+              {!isSubmitted ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={!allAnswered}
+                  className={`px-6 py-2 rounded-lg font-semibold ${
+                    allAnswered
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  Submit Quiz
+                </button>
+              ) : (
+                <>
+                  {passed ? (
+                    <div className="flex items-center space-x-3">
+                      <span className="text-green-700 font-semibold">
+                        ✅ Quiz Passed! Step will be marked complete...
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleReset}
+                      className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
+                    >
+                      Try Again
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          
+          {/* Debug info */}
+          <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
+            <div>Selected: {selectedAnswers[currentQuestion] !== -1 ? `Option ${selectedAnswers[currentQuestion] + 1}` : 'None'}</div>
+            <div>Processing: {isProcessingClick ? 'Yes' : 'No'}</div>
+            <div>Submitted: {isSubmitted ? 'Yes' : 'No'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
