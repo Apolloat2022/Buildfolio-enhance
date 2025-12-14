@@ -76,5 +76,5 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 }
 
-          {/* Certificate Completion Flow */}
-          <ProjectCompletionSection projectSlug={slug} />
+          {/* Certificate Completion Flow */}<!-- TEMPORARILY REMOVED: <ProjectCompletionSection projectSlug={slug} /> -->
+
