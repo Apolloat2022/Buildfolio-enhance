@@ -1,20 +1,8 @@
-﻿// components/QuizModal.tsx - SIMPLIFIED VERSION (no framer-motion)
+﻿// components/QuizModal.tsx - UPDATED TO MATCH EXISTING PROPS
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { X, Check, XCircle, HelpCircle } from "lucide-react"
-
-interface QuizModalProps {
-  isOpen: boolean
-  onClose: () => void
-  stepId: string
-  stepTitle: string
-  onQuizComplete?: (passed: boolean) => void
-  isOpen: boolean
-  onClose: () => void
-  stepId: string
-  stepTitle: string
-}
 
 interface QuizQuestion {
   id: string
@@ -24,35 +12,18 @@ interface QuizQuestion {
   explanation: string | null
 }
 
-export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizModalProps) {
-  const [questions, setQuestions] = useState<QuizQuestion[]>([])
+interface QuizModalProps {
+  stepId: string
+  questions: QuizQuestion[]
+  onPass: () => void
+  onClose: () => void
+}
+
+export default function QuizModal({ stepId, questions, onPass, onClose }: QuizModalProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([])
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>(new Array(questions.length).fill(-1))
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [score, setScore] = useState(0)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (isOpen && stepId) {
-      fetchQuestions()
-    }
-  }, [isOpen, stepId])
-
-  async function fetchQuestions() {
-    try {
-      setLoading(true)
-      const response = await fetch(`/api/quiz/questions?stepId=${stepId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setQuestions(data)
-        setSelectedAnswers(new Array(data.length).fill(-1))
-      }
-    } catch (error) {
-      console.error("Failed to fetch quiz questions:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   function handleSelectAnswer(questionIndex: number, optionIndex: number) {
     if (isSubmitted) return
@@ -78,11 +49,6 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
     setScore(correctCount)
     setIsSubmitted(true)
 
-      // Call callback if provided
-    if (props.onQuizComplete) {
-      props.onQuizComplete(correctCount >= Math.ceil(questions.length * 0.8))
-    }
-    
     // Submit results to server
     fetch("/api/quiz/submit", {
       method: "POST",
@@ -93,6 +59,10 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
         score: correctCount,
         passed: correctCount >= Math.ceil(questions.length * 0.8) // 80% to pass
       })
+    }).then(response => {
+      if (response.ok) {
+        console.log("Quiz results submitted")
+      }
     })
   }
 
@@ -115,12 +85,17 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
     }
   }
 
-  if (!isOpen) return null
-
   const currentQuiz = questions[currentQuestion]
   const totalQuestions = questions.length
   const passed = score >= Math.ceil(totalQuestions * 0.8)
   const allAnswered = selectedAnswers.every(answer => answer !== -1)
+
+  // If user passed and this is after submission, call onPass
+  if (isSubmitted && passed && onPass) {
+    setTimeout(() => {
+      onPass()
+    }, 1500)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
@@ -129,7 +104,7 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b bg-white/95">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Step Quiz</h2>
-            <p className="text-gray-700 mt-1">{stepTitle}</p>
+            <p className="text-gray-700 mt-1">Answer all questions to complete this step</p>
           </div>
           <button
             onClick={onClose}
@@ -161,12 +136,7 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
 
         {/* Content */}
         <div className="p-6">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p className="mt-4 text-gray-600">Loading quiz questions...</p>
-            </div>
-          ) : questions.length === 0 ? (
+          {questions.length === 0 ? (
             <div className="text-center py-12">
               <HelpCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No Quiz Available</h3>
@@ -292,12 +262,11 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
                   ) : (
                     <>
                       {passed ? (
-                        <button
-                          onClick={onClose}
-                          className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700"
-                        >
-                          Continue Learning
-                        </button>
+                        <div className="flex items-center space-x-3">
+                          <span className="text-green-700 font-semibold">
+                            ✅ Quiz Passed! Step will be marked complete...
+                          </span>
+                        </div>
                       ) : (
                         <button
                           onClick={handleReset}
@@ -342,7 +311,7 @@ export default function QuizModal({ isOpen, onClose, stepId, stepTitle }: QuizMo
               </p>
               <p className={`text-sm mt-1 ${passed ? "text-green-700" : "text-red-700"}`}>
                 You scored {score} out of {totalQuestions} ({Math.round((score / totalQuestions) * 100)}%)
-                {passed ? " - You can continue to the next step!" : " - You need 80% to pass."}
+                {passed ? " - This step will be marked complete!" : " - You need 80% to pass."}
               </p>
             </div>
           </div>

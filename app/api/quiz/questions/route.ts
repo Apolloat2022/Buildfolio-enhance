@@ -1,16 +1,21 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+﻿// app/api/quiz/questions/route.ts
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(req: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(req.url)
+    const { searchParams } = new URL(request.url)
     const stepId = searchParams.get('stepId')
 
     if (!stepId) {
-      return NextResponse.json({ error: 'Step ID required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Step ID is required' },
+        { status: 400 }
+      )
     }
 
-    const questions = await prisma.quizQuestion.findMany({
+    // Get quiz questions for this step
+    const quizQuestions = await prisma.quizQuestion.findMany({
       where: { stepId },
       orderBy: { order: 'asc' },
       select: {
@@ -23,12 +28,25 @@ export async function GET(req: NextRequest) {
       }
     })
 
-    return NextResponse.json({ questions })
+    // Format for frontend
+    const formattedQuestions = quizQuestions.map(q => ({
+      id: q.id,
+      question: q.question,
+      options: q.options,
+      correctIndex: q.correctIndex,
+      explanation: q.explanation
+    }))
+
+    return NextResponse.json({
+      questions: formattedQuestions,
+      count: formattedQuestions.length
+    })
 
   } catch (error) {
-    console.error('Fetch questions error:', error)
-    return NextResponse.json({ 
-      error: 'Failed to fetch questions' 
-    }, { status: 500 })
+    console.error('Error fetching quiz questions:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch quiz questions' },
+      { status: 500 }
+    )
   }
 }

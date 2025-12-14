@@ -1,48 +1,60 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+﻿// app/api/quiz/submit/route.ts
+import { NextResponse } from 'next/server'
 import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { stepId, answers, score, timeSpent } = await req.json()
+    const body = await request.json()
+    const { stepId, answers, score, passed } = body
 
-    // Get existing attempts for this step
-    const existingAttempts = await prisma.quizAttempt.count({
-      where: {
-        userId: session.user.id,
-        stepId: stepId
-      }
-    })
+    if (!stepId || !answers || score === undefined) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
 
-    // Create quiz attempt record
-    const attempt = await prisma.quizAttempt.create({
+    // Save quiz attempt
+    const quizAttempt = await prisma.quizAttempt.create({
       data: {
         userId: session.user.id,
-        stepId: stepId,
-        answers: answers,
-        score: score,
-        passed: score >= 80,
-        timeSpentSeconds: timeSpent || 0,
-        attemptNumber: existingAttempts + 1
+        stepId,
+        answers,
+        score,
+        passed,
+        timeSpentSeconds: 300, // Default 5 minutes
+        attemptNumber: 1
       }
     })
+
+    // Award points for passing quiz
+    if (passed) {
+      // Award 50 points for passing a quiz
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          totalPoints: { increment: 50 }
+        }
+      })
+    }
 
     return NextResponse.json({
       success: true,
-      passed: score >= 80,
-      attemptNumber: attempt.attemptNumber,
-      score: score
+      quizAttempt,
+      pointsAwarded: passed ? 50 : 0
     })
 
   } catch (error) {
-    console.error('Quiz submission error:', error)
-    return NextResponse.json({ 
-      error: 'Failed to submit quiz' 
-    }, { status: 500 })
+    console.error('Error submitting quiz:', error)
+    return NextResponse.json(
+      { error: 'Failed to submit quiz' },
+      { status: 500 }
+    )
   }
 }
