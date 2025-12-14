@@ -1,4 +1,4 @@
-﻿// components/QuizModal.tsx - ULTIMATE CRASH-PROOF VERSION
+// components/QuizModal.tsx - ULTIMATE CRASH-PROOF VERSION
 "use client"
 
 import { useState, useEffect } from "react"
@@ -24,7 +24,7 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
   // ============================================
   // ULTIMATE SAFETY: Handle ALL bad inputs at START
   // ============================================
-  console.log("🔍 QuizModal rendering with:", { 
+  console.log("?? QuizModal rendering with:", { 
     stepId, 
     hasQuestions: !!questions,
     type: typeof questions,
@@ -34,12 +34,12 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
 
   // Handle undefined/null BEFORE ANYTHING ELSE
   if (questions === undefined || questions === null) {
-    console.error("🔍 QuizModal ERROR: questions is", questions)
+    console.error("?? QuizModal ERROR: questions is", questions)
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
         <div className="bg-white rounded-xl p-6 max-w-md w-full">
           <div className="text-center">
-            <div className="text-5xl mb-4">🚨</div>
+            <div className="text-5xl mb-4">??</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Quiz Data Error</h3>
             <p className="text-gray-600 mb-4">
               Quiz questions failed to load. (Received: {questions === undefined ? "undefined" : "null"})
@@ -58,12 +58,12 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
 
   // Handle non-arrays
   if (!Array.isArray(questions)) {
-    console.error("🔍 QuizModal ERROR: questions is not an array, type:", typeof questions, "value:", questions)
+    console.error("?? QuizModal ERROR: questions is not an array, type:", typeof questions, "value:", questions)
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
         <div className="bg-white rounded-xl p-6 max-w-md w-full">
           <div className="text-center">
-            <div className="text-5xl mb-4">❌</div>
+            <div className="text-5xl mb-4">?</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Invalid Quiz Data</h3>
             <p className="text-gray-600 mb-4">
               Expected array but got: {typeof questions}
@@ -81,8 +81,8 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
   }
 
   // Handle empty arrays
-  if (questions.length === 0) {
-    console.log("🔍 QuizModal: Empty questions array")
+  if (!questions || questions.length === 0) {
+    console.log("?? QuizModal: Empty questions array")
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
         <div className="bg-white rounded-xl p-6 max-w-md w-full">
@@ -344,7 +344,7 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
                       {passed ? (
                         <div className="flex items-center space-x-3">
                           <span className="text-green-700 font-semibold">
-                            ✅ Quiz Passed! Step will be marked complete...
+                            ? Quiz Passed! Step will be marked complete...
                           </span>
                         </div>
                       ) : (
@@ -385,7 +385,7 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
               <div className={`p-4 border-t ${passed ? "bg-green-50" : "bg-red-50"}`}>
                 <div className="text-center">
                   <p className={`font-semibold ${passed ? "text-green-800" : "text-red-800"}`}>
-                    {passed ? "🎉 Congratulations! You passed the quiz." : "📚 Review the material and try again."}
+                    {passed ? "?? Congratulations! You passed the quiz." : "?? Review the material and try again."}
                   </p>
                   <p className={`text-sm mt-1 ${passed ? "text-green-700" : "text-red-700"}`}>
                     You scored {score} out of {totalQuestions} ({Math.round((score / totalQuestions) * 100)}%)
@@ -398,3 +398,4 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
         </div>
       )
     }
+
