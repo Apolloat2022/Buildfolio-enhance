@@ -1,11 +1,9 @@
 ﻿"use client"
+
 import Link from 'next/link'
 import Image from 'next/image'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import Link from 'next/link'
 import { signOut, useSession } from 'next-auth/react'
-import Link from 'next/link'
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -19,7 +17,6 @@ export default function Navigation() {
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-        <Link href="/certificates" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100">
           <span className="text-xl">🎓</span>
           <span>Certificates</span>
         </Link>
