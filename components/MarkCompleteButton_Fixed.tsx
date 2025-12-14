@@ -1,7 +1,7 @@
 ﻿// components/MarkCompleteButton_Fixed.tsx
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 import QuizModal from './QuizModal'
 
@@ -27,6 +27,9 @@ export default function MarkCompleteButton_Fixed({
   const [quizQuestions, setQuizQuestions] = useState<any[] | null>(null)
   const [quizError, setQuizError] = useState<string | null>(null)
   const [loadingQuiz, setLoadingQuiz] = useState(false)
+  
+  // Use ref to prevent multiple rapid clicks
+  const isOpeningQuiz = useRef(false)
 
   async function markComplete(bypassQuiz = false) {
     setIsLoading(true)
@@ -49,17 +52,22 @@ export default function MarkCompleteButton_Fixed({
   }
 
   async function loadQuiz() {
+    // Prevent multiple simultaneous calls
+    if (isOpeningQuiz.current) return
+    isOpeningQuiz.current = true
+    
     setLoadingQuiz(true)
     setQuizError(null)
+    setQuizQuestions(null) // Clear previous questions
     
     try {
-      console.log('Loading quiz for step:', stepId)
+      console.log('📚 Loading quiz for step:', stepId)
       
-      const response = await fetch(\/api/quiz/questions?stepId=\\)
+      const response = await fetch(`/api/quiz/questions?stepId=${stepId}`)
       
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(\API Error \: \\)
+        throw new Error(`API Error ${response.status}: ${errorText}`)
       }
       
       const data = await response.json()
@@ -72,31 +80,45 @@ export default function MarkCompleteButton_Fixed({
       
       if (data.questions.length === 0) {
         console.log('No quiz questions for this step')
-        markComplete(true) // Mark complete without quiz
+        setQuizError('No quiz questions available for this step.')
+        // Don't auto-mark complete - let user decide
         return
       }
       
+      // Set questions first, THEN open modal
       setQuizQuestions(data.questions)
-      setShowQuiz(true)
+      
+      // Small delay to ensure state is set before showing modal
+      setTimeout(() => {
+        setShowQuiz(true)
+      }, 100)
       
     } catch (error: any) {
       console.error('Quiz load error:', error)
       setQuizError(error.message || 'Failed to load quiz')
       
-      // Show user-friendly error
-      alert(\Quiz Error: \\n\nYou can still mark the step complete.\)
+      // Show error but don't close immediately
+      setTimeout(() => {
+        alert(`Quiz Error: ${error.message}\n\nPlease try again or contact support.`)
+      }, 500)
       
-      // Option to mark complete anyway
-      if (confirm('Would you like to mark this step complete anyway?')) {
-        markComplete(true)
-      }
     } finally {
       setLoadingQuiz(false)
+      setTimeout(() => {
+        isOpeningQuiz.current = false
+      }, 1000) // Prevent rapid re-clicks
     }
   }
 
   function handleQuizPass() {
+    setShowQuiz(false)
     markComplete(false)
+  }
+
+  function handleQuizClose() {
+    setShowQuiz(false)
+    setQuizQuestions(null)
+    setQuizError(null)
   }
 
   function handleClick() {
@@ -135,9 +157,23 @@ export default function MarkCompleteButton_Fixed({
         )}
       </button>
       
-      {quizError && (
-        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-          <strong>Quiz Error:</strong> {quizError}
+      {quizError && !showQuiz && (
+        <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-700 text-sm">
+          <strong>Note:</strong> {quizError}
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => markComplete(true)}
+              className="px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
+            >
+              Mark Complete Anyway
+            </button>
+            <button
+              onClick={loadQuiz}
+              className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+            >
+              Retry Quiz
+            </button>
+          </div>
         </div>
       )}
       
@@ -146,10 +182,7 @@ export default function MarkCompleteButton_Fixed({
           stepId={stepId}
           questions={quizQuestions}
           onPass={handleQuizPass}
-          onClose={() => {
-            setShowQuiz(false)
-            setQuizQuestions(null)
-          }}
+          onClose={handleQuizClose}
         />
       )}
     </>
