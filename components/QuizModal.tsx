@@ -1,4 +1,4 @@
-﻿// components/QuizModal.tsx - FIXED VERSION
+﻿// components/QuizModal.tsx - SAFE VERSION (handles undefined questions)
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -14,16 +14,19 @@ interface QuizQuestion {
 
 interface QuizModalProps {
   stepId: string
-  questions: QuizQuestion[]
+  questions?: QuizQuestion[]  // Make optional
   onPass: () => void
   onClose: () => void
 }
 
-export default function QuizModal({ stepId, questions, onPass, onClose }: QuizModalProps) {
-  // SINGLE state for all UI state
+export default function QuizModal({ stepId, questions = [], onPass, onClose }: QuizModalProps) {
+  // SAFE INITIALIZATION: Handle undefined questions
+  const questionsSafe = questions || []
+  
+  // SINGLE state for all UI state - use questionsSafe.length
   const [uiState, setUiState] = useState({
     currentQuestion: 0,
-    selectedAnswers: new Array(questions.length).fill(-1),
+    selectedAnswers: new Array(questionsSafe.length).fill(-1),
     isSubmitted: false,
     score: 0,
     isVisible: false
@@ -31,7 +34,7 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
   
   const renderCount = useRef(0)
   const isMounted = useRef(false)
-  const clickInProgress = useRef(false) // Prevent double clicks
+  const clickInProgress = useRef(false)
 
   // Update single state property helper
   const updateUiState = useCallback((updates: Partial<typeof uiState>) => {
@@ -68,20 +71,19 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
     }
   }, [updateUiState, handleClose])
 
-  // Auto-pass if submitted and passed
+  // Auto-pass if submitted and passed - use questionsSafe.length
   useEffect(() => {
-    if (uiState.isSubmitted && uiState.score >= Math.ceil(questions.length * 0.8)) {
+    if (uiState.isSubmitted && uiState.score >= Math.ceil(questionsSafe.length * 0.8)) {
       const timer = setTimeout(() => {
         onPass()
       }, 2000)
       
       return () => clearTimeout(timer)
     }
-  }, [uiState.isSubmitted, uiState.score, questions.length, onPass])
+  }, [uiState.isSubmitted, uiState.score, questionsSafe.length, onPass])
 
   // FIX: Proper click handler with event prevention
   const handleSelectAnswer = useCallback((questionIndex: number, optionIndex: number, e: React.MouseEvent) => {
-    // CRITICAL: Prevent event bubbling and default behavior
     e.preventDefault()
     e.stopPropagation()
     
@@ -89,15 +91,12 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
     
     clickInProgress.current = true
     
-    console.log(`Selecting answer: Q${questionIndex + 1}, Option ${optionIndex}`)
-    
     updateUiState({
       selectedAnswers: uiState.selectedAnswers.map((answer, idx) => 
         idx === questionIndex ? optionIndex : answer
       )
     })
     
-    // Reset click lock after a short delay
     setTimeout(() => {
       clickInProgress.current = false
     }, 100)
@@ -111,7 +110,7 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
 
     let correctCount = 0
     uiState.selectedAnswers.forEach((answer, index) => {
-      if (answer === questions[index].correctIndex) {
+      if (answer === questionsSafe[index]?.correctIndex) {
         correctCount++
       }
     })
@@ -121,18 +120,20 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
       score: correctCount
     })
 
-    // Submit results
-    fetch("/api/quiz/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        stepId,
-        answers: uiState.selectedAnswers,
-        score: correctCount,
-        passed: correctCount >= Math.ceil(questions.length * 0.8)
+    // Submit results - check if we have questions
+    if (questionsSafe.length > 0) {
+      fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stepId,
+          answers: uiState.selectedAnswers,
+          score: correctCount,
+          passed: correctCount >= Math.ceil(questionsSafe.length * 0.8)
+        })
       })
-    })
-  }, [uiState.selectedAnswers, questions, stepId, updateUiState])
+    }
+  }, [uiState.selectedAnswers, questionsSafe, stepId, updateUiState])
 
   const handleClose = useCallback(() => {
     updateUiState({ isVisible: false })
@@ -142,10 +143,10 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
   }, [onClose, updateUiState])
 
   const handleNext = useCallback(() => {
-    if (uiState.currentQuestion < questions.length - 1) {
+    if (uiState.currentQuestion < questionsSafe.length - 1) {
       updateUiState({ currentQuestion: uiState.currentQuestion + 1 })
     }
-  }, [uiState.currentQuestion, questions.length, updateUiState])
+  }, [uiState.currentQuestion, questionsSafe.length, updateUiState])
 
   const handlePrev = useCallback(() => {
     if (uiState.currentQuestion > 0) {
@@ -153,10 +154,29 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
     }
   }, [uiState.currentQuestion, updateUiState])
 
-  const currentQuiz = questions[uiState.currentQuestion]
-  const totalQuestions = questions.length
+  // SAFE ACCESS: Use optional chaining and nullish coalescing
+  const currentQuiz = questionsSafe[uiState.currentQuestion]
+  const totalQuestions = questionsSafe.length
   const passed = uiState.score >= Math.ceil(totalQuestions * 0.8)
   const allAnswered = uiState.selectedAnswers.every(answer => answer !== -1)
+
+  // If no questions, show error state
+  if (questionsSafe.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+        <div className="bg-white rounded-xl p-8 max-w-md">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">No Quiz Available</h3>
+          <p className="text-gray-600 mb-4">This quiz doesn't have any questions configured.</p>
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Smooth transitions
   const opacityClass = uiState.isVisible ? 'opacity-100' : 'opacity-0'
@@ -166,7 +186,6 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
     <div 
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 transition-all duration-200 ${opacityClass}`}
       onClick={(e) => {
-        // Close on backdrop click
         if (e.target === e.currentTarget) {
           handleClose()
         }
@@ -213,42 +232,41 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
         <div className="p-6">
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              {currentQuiz?.question}
+              {currentQuiz?.question || "No question available"}
             </h3>
             
             <div className="space-y-3">
-              {currentQuiz?.options.map((option, optionIndex) => {
+              {currentQuiz?.options?.map((option, optionIndex) => {
                 const isSelected = uiState.selectedAnswers[uiState.currentQuestion] === optionIndex
                 const isCorrect = optionIndex === currentQuiz.correctIndex
                 const showResults = uiState.isSubmitted
                 
-                // FIX: Use consistent color classes
                 let buttonClasses = "w-full p-4 text-left rounded-xl border-2 transition-all duration-200 "
                 let circleClasses = "flex-shrink-0 w-6 h-6 rounded-full border-2 mt-0.5 mr-3 flex items-center justify-center "
-                let textClasses = "font-medium "  // CRITICAL: Add space at end
+                let textClasses = "font-medium "
                 
                 if (showResults) {
                   if (isCorrect) {
                     buttonClasses += "border-green-500 bg-green-50 "
                     circleClasses += "border-green-600 bg-green-600 "
-                    textClasses += "text-green-900"  // Dark green text
+                    textClasses += "text-green-900"
                   } else if (isSelected && !isCorrect) {
                     buttonClasses += "border-red-500 bg-red-50 "
                     circleClasses += "border-red-600 bg-red-600 "
-                    textClasses += "text-red-900"  // Dark red text
+                    textClasses += "text-red-900"
                   } else {
                     buttonClasses += "border-gray-200 bg-gray-50 "
                     circleClasses += "border-gray-300 "
-                    textClasses += "text-gray-700"  // Medium gray text (not too light)
+                    textClasses += "text-gray-700"
                   }
                 } else if (isSelected) {
                   buttonClasses += "border-blue-500 bg-blue-50 "
                   circleClasses += "border-blue-600 bg-blue-600 "
-                  textClasses += "text-blue-900"  // Dark blue text
+                  textClasses += "text-blue-900"
                 } else {
                   buttonClasses += "border-gray-200 hover:border-gray-300 hover:bg-gray-50 "
                   circleClasses += "border-gray-300 "
-                  textClasses += "text-gray-800"  // Dark gray text (not light)
+                  textClasses += "text-gray-800"
                 }
                 
                 buttonClasses += uiState.isSubmitted ? "cursor-default" : "cursor-pointer"
@@ -256,7 +274,7 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
                 return (
                   <div key={optionIndex} className="relative">
                     <button
-                      onMouseDown={(e) => e.preventDefault()} // Prevent text selection
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={(e) => handleSelectAnswer(uiState.currentQuestion, optionIndex, e)}
                       disabled={uiState.isSubmitted || clickInProgress.current}
                       className={`${buttonClasses} select-none active:scale-[0.99]`}
@@ -272,11 +290,6 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
                         </span>
                       </div>
                     </button>
-                    
-                    {/* Debug: Show if click is in progress */}
-                    {clickInProgress.current && isSelected && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
-                    )}
                   </div>
                 )
               })}
@@ -336,7 +349,7 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
                   onClick={() => {
                     updateUiState({
                       currentQuestion: 0,
-                      selectedAnswers: new Array(questions.length).fill(-1),
+                      selectedAnswers: new Array(questionsSafe.length).fill(-1),
                       isSubmitted: false,
                       score: 0
                     })
@@ -347,15 +360,6 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
                 </button>
               )}
             </div>
-          </div>
-          
-          {/* Debug info (remove in production) */}
-          <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
-            <div>Selected: {uiState.selectedAnswers[uiState.currentQuestion] !== -1 
-              ? `Option ${String.fromCharCode(65 + uiState.selectedAnswers[uiState.currentQuestion])}` 
-              : 'None'}</div>
-            <div>Click in progress: {clickInProgress.current ? 'Yes' : 'No'}</div>
-            <div>Submitted: {uiState.isSubmitted ? 'Yes' : 'No'}</div>
           </div>
         </div>
       </div>
