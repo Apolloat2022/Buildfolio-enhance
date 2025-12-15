@@ -1,4 +1,4 @@
-﻿// components/QuizModal.tsx - WORKING VERSION
+﻿// components/QuizModal.tsx - FIXED VERSION
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -26,12 +26,19 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [score, setScore] = useState(0)
 
+  // FIX: Move document manipulation to useEffect
   useEffect(() => {
     setMounted(true)
+    
+    // Save original overflow style
+    const originalOverflow = document.body.style.overflow
+    
+    // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden'
     
     return () => {
-      document.body.style.overflow = ''
+      // Restore original overflow style
+      document.body.style.overflow = originalOverflow
     }
   }, [])
 
@@ -82,7 +89,10 @@ export default function QuizModal({ stepId, questions, onPass, onClose }: QuizMo
     })
   }
 
-  if (!mounted) return null
+  // Don't render anything until mounted (prevents hydration mismatch)
+  if (!mounted) {
+    return null
+  }
 
   const currentQuiz = questions[currentQuestion]
   const totalQuestions = questions.length

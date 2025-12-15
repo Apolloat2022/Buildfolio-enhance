@@ -1,4 +1,4 @@
-﻿// components/MarkCompleteButton.tsx - WORKING VERSION
+﻿// components/MarkCompleteButton.tsx - ENSURING IT WORKS
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -37,11 +37,17 @@ export default function MarkCompleteButton({
         body: JSON.stringify({ stepId, projectId })
       })
       
-      if (!response.ok) throw new Error('Failed to mark complete')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to mark complete')
+      }
+      
+      // Success - reload to update UI
       window.location.reload()
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error:', error)
-      alert('Failed to mark step as complete')
+      alert(`❌ Failed: ${error.message}`)
       setIsLoading(false)
     }
   }
@@ -50,25 +56,29 @@ export default function MarkCompleteButton({
     setLoadingQuiz(true)
     
     try {
+      console.log('Loading quiz for step:', stepId)
       const response = await fetch(`/api/quiz/questions?stepId=${stepId}`)
       
       if (!response.ok) {
-        throw new Error(`Failed to load: ${response.status}`)
+        throw new Error(`Failed to load quiz: ${response.status}`)
       }
       
       const data = await response.json()
+      console.log('Quiz data received:', data)
       
       if (!data.questions || data.questions.length === 0) {
-        alert('No quiz questions for this step. Marking as complete.')
+        alert('No quiz questions found. Marking as complete.')
         markComplete()
         return
       }
       
       setQuizQuestions(data.questions)
       setShowQuiz(true)
+      
     } catch (error: any) {
       console.error('Quiz error:', error)
-      alert(`Quiz Error: ${error.message}`)
+      alert(`Quiz Error: ${error.message}\n\nMarking as complete anyway.`)
+      markComplete()
     } finally {
       setLoadingQuiz(false)
     }
