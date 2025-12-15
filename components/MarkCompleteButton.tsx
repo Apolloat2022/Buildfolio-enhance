@@ -1,8 +1,9 @@
-﻿// components/MarkCompleteButton.tsx - SIMPLE VERSION
+﻿// components/MarkCompleteButton.tsx - WORKING VERSION
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, Loader2 } from 'lucide-react'
+import QuizModal from './QuizModal'
 
 interface MarkCompleteButtonProps {
   stepId: string
@@ -17,30 +18,18 @@ export default function MarkCompleteButton({
   isCompleted,
   requiresQuiz = true
 }: MarkCompleteButtonProps) {
-  const [state, setState] = useState({
-    isLoading: false,
-    showQuiz: false,
-    quizQuestions: [] as any[],
-    loadingQuiz: false
-  })
-  
+  const [isLoading, setIsLoading] = useState(false)
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([])
+  const [loadingQuiz, setLoadingQuiz] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
-  const clickRef = useRef(false)
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  const updateState = useCallback((updates) => {
-    setState(prev => ({ ...prev, ...updates }))
-  }, [])
-
-  const markComplete = useCallback(async () => {
-    if (clickRef.current) return
-    clickRef.current = true
-    
-    updateState({ isLoading: true })
-    
+  async function markComplete() {
+    setIsLoading(true)
     try {
       const response = await fetch('/api/progress', {
         method: 'POST',
@@ -49,28 +38,20 @@ export default function MarkCompleteButton({
       })
       
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to mark complete')
+        throw new Error('Failed to mark complete')
       }
       
-      // Success
-      setTimeout(() => {
-        window.location.reload()
-      }, 500)
-      
-    } catch (error: any) {
+      // Success - reload page
+      window.location.reload()
+    } catch (error) {
       console.error('Error:', error)
-      alert(`❌ Failed: ${error.message}`)
-      updateState({ isLoading: false })
-      clickRef.current = false
+      alert('Failed to mark step as complete')
+      setIsLoading(false)
     }
-  }, [stepId, projectId, updateState])
+  }
 
-  const loadQuiz = useCallback(async () => {
-    if (clickRef.current) return
-    clickRef.current = true
-    
-    updateState({ loadingQuiz: true })
+  async function loadQuiz() {
+    setLoadingQuiz(true)
     
     try {
       const response = await fetch(`/api/quiz/questions?stepId=${stepId}`)
@@ -87,44 +68,41 @@ export default function MarkCompleteButton({
         return
       }
       
-      updateState({
-        quizQuestions: data.questions,
-        showQuiz: true,
-        loadingQuiz: false
-      })
-      
+      setQuizQuestions(data.questions)
+      setShowQuiz(true)
     } catch (error: any) {
       console.error('Quiz error:', error)
-      alert(`Quiz Error: ${error.message}\n\nMarking as complete anyway.`)
+      alert(`Error: ${error.message}. Marking as complete.`)
       markComplete()
     } finally {
-      clickRef.current = false
+      setLoadingQuiz(false)
     }
-  }, [stepId, markComplete, updateState])
+  }
 
-  const handleClick = useCallback(() => {
+  function handleClick() {
     if (isCompleted) return
     
-    if (requiresQuiz && !state.showQuiz) {
+    if (requiresQuiz) {
       loadQuiz()
     } else {
       markComplete()
     }
-  }, [isCompleted, requiresQuiz, state.showQuiz, loadQuiz, markComplete])
+  }
 
-  const handleQuizPass = useCallback(() => {
-    updateState({ showQuiz: false, quizQuestions: [] })
+  function handleQuizPass() {
+    setShowQuiz(false)
     markComplete()
-  }, [markComplete, updateState])
+  }
 
-  const handleQuizClose = useCallback(() => {
-    updateState({ showQuiz: false, quizQuestions: [] })
-  }, [updateState])
+  function handleQuizClose() {
+    setShowQuiz(false)
+    setQuizQuestions([])
+  }
 
-  // Don't render anything until mounted
+  // Don't render button until mounted
   if (!isMounted) {
     return (
-      <div className="w-full py-3 px-4 bg-gray-100 rounded-lg animate-pulse"></div>
+      <div className="w-full py-3 px-4 bg-gray-200 rounded-lg animate-pulse"></div>
     )
   }
 
@@ -137,34 +115,31 @@ export default function MarkCompleteButton({
     )
   }
 
-  // Dynamically import QuizModal only when needed
-  const renderQuizModal = () => {
-    if (state.showQuiz && state.quizQuestions.length > 0) {
-      // This will be handled by the conditional rendering in the parent
-      return null
-    }
-    return null
-  }
-
   return (
     <>
       <button
         onClick={handleClick}
-        disabled={state.isLoading || state.loadingQuiz}
-        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+        disabled={isLoading || loadingQuiz}
+        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        {state.isLoading || state.loadingQuiz ? (
+        {isLoading || loadingQuiz ? (
           <>
             <Loader2 className="animate-spin" size={20} />
-            {state.loadingQuiz ? 'Loading Quiz...' : 'Processing...'}
+            {loadingQuiz ? 'Loading Quiz...' : 'Processing...'}
           </>
         ) : (
           'Mark Complete'
         )}
       </button>
       
-      {renderQuizModal()}
+      {showQuiz && quizQuestions.length > 0 && (
+        <QuizModal
+          stepId={stepId}
+          questions={quizQuestions}
+          onPass={handleQuizPass}
+          onClose={handleQuizClose}
+        />
+      )}
     </>
   )
 }
-
