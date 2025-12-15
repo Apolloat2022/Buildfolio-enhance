@@ -422,3 +422,75 @@ code {
   -ms-user-select: none;
   user-select: none;
 }
+
+
+/* Fix for broken icons */
+/* Add to globals.css to hide broken icons */
+.icon-placeholder:empty,
+.icon-container:empty,
+span[class*="icon"]:not(:has(*))::before,
+div[class*="icon"]:not(:has(*))::before {
+    display: none !important;
+}
+
+/* Target specific sections by their text */
+section:has(p:contains("Project-Based")) svg,
+section:has(p:contains("Verified Learning")) svg,
+section:has(p:contains("Career Ready")) svg {
+    width: 40px !important;
+    height: 40px !important;
+    color: #3b82f6 !important; /* blue-500 */
+}
+
+
+/* Icon fixes for homepage */
+/* Fix for broken icons on homepage */
+.icon-fix {
+    position: relative;
+}
+
+/* Hide question mark placeholders */
+.icon-fix svg[width="1em"][height="1em"]:empty,
+.icon-fix svg:not([viewBox]),
+.icon-fix span:empty::before,
+.icon-fix div:empty::before {
+    display: none !important;
+}
+
+/* Add proper icons via CSS pseudo-elements */
+section:has(p:contains("Project-Based")) .icon-container::before {
+    content: "💼";
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+section:has(p:contains("Verified Learning")) .icon-container::before {
+    content: "✅";
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+section:has(p:contains("Career Ready")) .icon-container::before {
+    content: "🎯";
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+/* Or use emoji directly in the sections */
+.project-based-icon::before {
+    content: "💼";
+    font-size: 2.5rem;
+}
+
+.verified-learning-icon::before {
+    content: "✅";
+    font-size: 2.5rem;
+}
+
+.career-ready-icon::before {
+    content: "🎯";
+    font-size: 2.5rem;
+}

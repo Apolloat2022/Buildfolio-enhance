@@ -1,6 +1,7 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { auth } from './auth'
 
+import { Briefcase, CheckCircle, Award, Rocket, Target, ShieldCheck } from "lucide-react";
 export default async function Home() {
   const session = await auth()
 
@@ -69,19 +70,25 @@ export default async function Home() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="card-modern group">
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">??</div>
+              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
+                <Briefcase className="h-12 w-12 text-blue-400" />
+              </div>
               <h3 className="text-2xl font-bold mb-3 text-white">Project-Based</h3>
               <p className="text-gray-400">Build real applications, not toy examples. Every project is production-ready.</p>
             </div>
 
             <div className="card-modern group">
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">?</div>
+              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
+                <Briefcase className="h-12 w-12 text-blue-400" />
+              </div>
               <h3 className="text-2xl font-bold mb-3 text-white">Verified Learning</h3>
               <p className="text-gray-400">Pass quizzes, validate your code, earn certificates that prove your skills.</p>
             </div>
 
             <div className="card-modern group">
-              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">??</div>
+              <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
+                <CheckCircle className="h-12 w-12 text-green-400" />
+              </div>
               <h3 className="text-2xl font-bold mb-3 text-white">Career Ready</h3>
               <p className="text-gray-400">Build a portfolio that gets you hired. Real projects, real impact.</p>
             </div>
@@ -109,4 +116,5 @@ export default async function Home() {
     </div>
   )
 }
+
 
