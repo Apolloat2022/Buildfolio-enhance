@@ -1,5 +1,6 @@
-import type { Metadata } from "next"
+﻿import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import BlockWalletInjection from '@/components/BlockWalletInjection'
 import "./globals.css"
 import ToastContainer from "@/components/ToastContainer"
 import CertificateFloatingButton from "@/components/CertificateFloatingButton"
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+  <BlockWalletInjection />
         <SessionProvider>
           <Navigation />
           <ToastContainer />
