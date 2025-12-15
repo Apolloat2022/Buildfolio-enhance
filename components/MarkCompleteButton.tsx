@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { Check, Loader2 } from 'lucide-react'
-import QuizModal from './QuizModal'
+import QuizModalComplete from '@/components/QuizModalComplete' './QuizModal'
 
 interface MarkCompleteButtonProps {
   stepId: string
@@ -133,7 +133,7 @@ export default function MarkCompleteButton({
       </button>
       
       {showQuiz && quizQuestions.length > 0 && (
-        <QuizModal
+        <QuizModalComplete
           stepId={stepId}
           questions={quizQuestions}
           onPass={handleQuizPass}
@@ -143,3 +143,4 @@ export default function MarkCompleteButton({
     </>
   )
 }
+
