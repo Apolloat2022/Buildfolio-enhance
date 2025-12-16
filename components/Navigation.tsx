@@ -12,17 +12,12 @@ export default async function Navigation() {
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-   {/* LEFT: BuildFolio Logo */}
-<Link href="/" className="flex items-center space-x-2">
-  <Image 
-    src="/images/buildfolio-logo.png" 
-    alt="BuildFolio Logo" 
-    width={150} 
-    height={40} 
-    className="object-contain"
-    priority // Optional: loads the logo faster since it's above the fold
-  />
-</Link>
+          {/* LEFT: BuildFolio Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              BuildFolio
+            </span>
+          </Link>
 
           {/* RIGHT: Navigation Links (NO Certificates here) */}
           <div className="flex items-center space-x-8">
