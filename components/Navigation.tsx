@@ -1,55 +1,95 @@
-﻿// components/Navigation.tsx - CORRECT: No "Certificates" in top bar
+﻿// components/Navigation.tsx
 "use client"
 
 import Link from "next/link"
-import { auth } from "@/app/auth"
+import Image from "next/image"
+import { usePathname, useRouter } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
 import { Home, FolderKanban, LayoutDashboard, LogOut } from "lucide-react"
+import { useState } from "react"
 
-export default async function Navigation() {
-  const session = await auth()
+export default function Navigation() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const { data: session } = useSession()
+  
+  // Debug logging
+  console.log("Current pathname:", pathname)
+  console.log("Session:", session)
+  
+  // Test function for manual navigation
+  const handleTestNavigation = (path: string) => {
+    console.log("Attempting to navigate to:", path)
+    router.push(path)
+  }
+
+  // Hide navigation on auth pages
+  if (pathname === '/auth/signin' || pathname === '/auth/error') return null
 
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* LEFT: BuildFolio Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              BuildFolio
-            </span>
-          </Link>
+          <div 
+            onClick={() => handleTestNavigation('/')}
+            className="flex items-center space-x-2 cursor-pointer"
+          >
+            <Image 
+              src="/buildfolio-logo.png"
+              alt="BuildFolio Logo" 
+              width={150} 
+              height={40} 
+              className="object-contain"
+              priority
+            />
+          </div>
 
-          {/* RIGHT: Navigation Links (NO Certificates here) */}
+          {/* RIGHT: Navigation Links */}
           <div className="flex items-center space-x-8">
-            <Link href="/" className="flex items-center space-x-2 text-gray-300 hover:text-white">
+            {/* Test button to check if router works */}
+            <button 
+              onClick={() => handleTestNavigation('/')}
+              className="flex items-center space-x-2 text-gray-300 hover:text-white"
+            >
               <Home className="h-4 w-4" />
               <span>Home</span>
-            </Link>
+            </button>
             
-            <Link href="/projects" className="flex items-center space-x-2 text-gray-300 hover:text-white">
+            {/* Regular Link for comparison */}
+            <Link 
+              href="/projects" 
+              className={`flex items-center space-x-2 ${pathname === '/projects' ? 'text-white' : 'text-gray-300 hover:text-white'}`}
+              onClick={() => console.log("Projects link clicked")}
+            >
               <FolderKanban className="h-4 w-4" />
               <span>Projects</span>
             </Link>
             
-            <Link href="/dashboard" className="flex items-center space-x-2 text-gray-300 hover:text-white">
+            {/* Dashboard */}
+            <Link 
+              href="/dashboard" 
+              className={`flex items-center space-x-2 ${pathname === '/dashboard' ? 'text-white' : 'text-gray-300 hover:text-white'}`}
+            >
               <LayoutDashboard className="h-4 w-4" />
               <span>Dashboard</span>
             </Link>
 
             {/* User/Sign Out */}
             {session ? (
-              <form action="/auth/signout" method="POST">
-                <button 
-                  type="submit" 
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
-                </button>
-              </form>
+              <button 
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
             ) : (
-              <Link href="/auth/signin" className="btn-primary">
-                Sign In
+              <Link 
+                href="/auth/signin" 
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold"
+              >
+                <span>Sign In</span>
               </Link>
             )}
           </div>
