@@ -1,7 +1,7 @@
 ﻿import Link from 'next/link'
 import { auth } from './auth'
 
-import { Briefcase, CheckCircle, Award, Rocket, Target, ShieldCheck } from "lucide-react";
+import { Briefcase, GraduationCap, CheckCircle, Award, Rocket, Target, ShieldCheck } from "lucide-react";
 export default async function Home() {
   const session = await auth()
 
@@ -79,7 +79,7 @@ export default async function Home() {
 
             <div className="card-modern group">
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
-                <Briefcase className="h-12 w-12 text-blue-400" />
+                <GraduationCap className="h-12 w-12 text-blue-400" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-white">Verified Learning</h3>
               <p className="text-gray-400">Pass quizzes, validate your code, earn certificates that prove your skills.</p>
