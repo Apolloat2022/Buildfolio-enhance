@@ -1,12 +1,258 @@
-// prisma/seed.ts - CLEAN SLATE VERSION
+﻿// prisma/seed.ts - UPDATED TO INCLUDE QUIZ SEEDING
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
+
+// Import the quiz seeding function
+async function seedQuizQuestions() {
+  console.log('📝 Seeding quiz questions...')
+  
+  try {
+    // Clear existing quiz questions
+    await prisma.quizQuestion.deleteMany()
+    console.log('🧹 Cleared existing quiz questions')
+
+    // Get all steps
+    const steps = await prisma.step.findMany({
+      orderBy: { order: 'asc' }
+    })
+
+    // Define quiz questions for each step
+    const quizData = [
+      // Step 1 questions
+      {
+        stepOrder: 1,
+        questions: [
+          {
+            question: 'What command creates a new Next.js project?',
+            options: [
+              'npm create next-app',
+              'npx create-next-app',
+              'npm install next',
+              'next init'
+            ],
+            correctIndex: 1,
+            explanation: 'npx runs packages without installing globally and ensures you get the latest version.',
+            order: 1
+          },
+          {
+            question: 'Which authentication library is recommended for Next.js?',
+            options: [
+              'Firebase Auth',
+              'NextAuth.js',
+              'Auth0',
+              'Passport.js'
+            ],
+            correctIndex: 1,
+            explanation: 'NextAuth.js is specifically designed for Next.js and offers seamless integration.',
+            order: 2
+          },
+          {
+            question: 'What environment variable is required for NextAuth.js?',
+            options: [
+              'NEXT_PUBLIC_AUTH_SECRET',
+              'NEXTAUTH_SECRET',
+              'AUTH_SECRET_KEY',
+              'NEXT_AUTH_TOKEN'
+            ],
+            correctIndex: 1,
+            explanation: 'NEXTAUTH_SECRET is required to encrypt cookies and tokens in NextAuth.js.',
+            order: 3
+          }
+        ]
+      },
+      // Step 2 questions
+      {
+        stepOrder: 2,
+        questions: [
+          {
+            question: 'Which ORM works best with Next.js and TypeScript?',
+            options: [
+              'Sequelize',
+              'TypeORM',
+              'Prisma',
+              'Mongoose'
+            ],
+            correctIndex: 2,
+            explanation: 'Prisma offers excellent TypeScript support and integrates well with Next.js.',
+            order: 1
+          },
+          {
+            question: 'What data type should you use for prices in a database?',
+            options: [
+              'Integer',
+              'Float',
+              'Decimal',
+              'String'
+            ],
+            correctIndex: 2,
+            explanation: 'Decimal is preferred for prices to avoid floating-point precision errors.',
+            order: 2
+          }
+        ]
+      },
+      // Step 3 questions  
+      {
+        stepOrder: 3,
+        questions: [
+          {
+            question: 'What is the recommended way to manage cart state?',
+            options: [
+              'React Context',
+              'Zustand',
+              'Redux',
+              'Local Storage'
+            ],
+            correctIndex: 1,
+            explanation: 'Zustand is lightweight and works well for cart state in e-commerce applications.',
+            order: 1
+          },
+          {
+            question: 'How should you validate cart items on the server?',
+            options: [
+              'Client-side validation only',
+              'Zod schema validation',
+              'No validation needed',
+              'Database constraints only'
+            ],
+            correctIndex: 1,
+            explanation: 'Zod provides type-safe schema validation that works on both client and server.',
+            order: 2
+          }
+        ]
+      },
+      // Step 4 questions
+      {
+        stepOrder: 4,
+        questions: [
+          {
+            question: 'Which payment processor is integrated in this project?',
+            options: [
+              'PayPal',
+              'Stripe',
+              'Square',
+              'Authorize.net'
+            ],
+            correctIndex: 1,
+            explanation: 'Stripe is used for payment processing in this e-commerce store.',
+            order: 1
+          },
+          {
+            question: 'What is crucial for handling payment webhooks?',
+            options: [
+              'Using GET requests',
+              'Validating Stripe signatures',
+              'Storing raw request body',
+              'Skipping validation for speed'
+            ],
+            correctIndex: 1,
+            explanation: 'Always validate Stripe signatures to ensure webhook requests are legitimate.',
+            order: 2
+          }
+        ]
+      },
+      // Step 5 questions
+      {
+        stepOrder: 5,
+        questions: [
+          {
+            question: 'What middleware pattern is used in Next.js?',
+            options: [
+              'Custom middleware',
+              'Next.js middleware',
+              'Express middleware',
+              'No middleware'
+            ],
+            correctIndex: 1,
+            explanation: 'Next.js has built-in middleware that runs before requests are completed.',
+            order: 1
+          }
+        ]
+      },
+      // Step 6 questions
+      {
+        stepOrder: 6,
+        questions: [
+          {
+            question: 'What should you implement for admin routes?',
+            options: [
+              'No authentication needed',
+              'Role-based access control',
+              'Public access',
+              'Client-side checks only'
+            ],
+            correctIndex: 1,
+            explanation: 'Always implement server-side role-based access control for admin routes.',
+            order: 1
+          }
+        ]
+      },
+      // Step 7 questions
+      {
+        stepOrder: 7,
+        questions: [
+          {
+            question: 'What is a key deployment consideration?',
+            options: [
+              'Skipping environment variables',
+              'Using production database in dev',
+              'Setting proper environment variables',
+              'Deploying without building'
+            ],
+            correctIndex: 2,
+            explanation: 'Always set proper environment variables for production deployment.',
+            order: 1
+          }
+        ]
+      }
+    ]
+
+    // Create quiz questions
+    let totalQuestions = 0
+    
+    for (const stepData of quizData) {
+      const step = steps.find(s => s.order === stepData.stepOrder)
+      
+      if (step) {
+        for (const question of stepData.questions) {
+          await prisma.quizQuestion.create({
+            data: {
+              stepId: step.id,
+              question: question.question,
+              options: question.options,
+              correctIndex: question.correctIndex,
+              explanation: question.explanation,
+              order: question.order
+            }
+          })
+          totalQuestions++
+        }
+      }
+    }
+
+    console.log(`✅ Created ${totalQuestions} quiz questions across ${steps.length} steps`)
+    return totalQuestions
+    
+  } catch (error) {
+    console.error('❌ Error seeding quiz questions:', error)
+    throw error
+  }
+}
 
 async function main() {
   console.log('🌱 Starting database seeding...')
   
   // 1. CLEAN UP EXISTING DATA (in correct order due to relations)
+  // First delete quiz-related data (reverse order due to foreign keys)
+  await prisma.quizAttempt.deleteMany()
+  console.log('🧹 Cleared existing quiz attempts')
+  
+  await prisma.quizQuestion.deleteMany()
+  console.log('🧹 Cleared existing quiz questions')
+  
+  await prisma.stepCompletion.deleteMany()
+  console.log('🧹 Cleared existing step completions')
+  
   await prisma.step.deleteMany()
   console.log('🧹 Cleared existing steps')
   
@@ -50,7 +296,6 @@ async function main() {
             pitfalls: ['Not adding proper indexes', 'Forgetting decimal precision for prices'],
             estimatedTime: '3 hours'
           },
-          // Add more steps as needed
           {
             order: 3,
             title: 'Product Listing & UI Components',
@@ -60,6 +305,47 @@ async function main() {
             ],
             pitfalls: ['Not making components responsive', 'Forgetting loading states'],
             estimatedTime: '4 hours'
+          },
+          {
+            order: 4,
+            title: 'Shopping Cart & State Management',
+            description: 'Implement cart functionality with proper state management.',
+            codeSnippets: [
+              { language: 'typescript', code: '// store/cart-store.ts\nimport { create } from "zustand";\n\ninterface CartStore {\n  items: CartItem[];\n  addItem: (product: Product) => void;\n  removeItem: (id: string) => void;\n}' }
+            ],
+            pitfalls: ['Not persisting cart state', 'Forgetting to validate cart items'],
+            estimatedTime: '3 hours'
+          },
+          {
+            order: 5,
+            title: 'Checkout & Payment Integration',
+            description: 'Integrate Stripe for secure payment processing.',
+            codeSnippets: [
+              { language: 'typescript', code: '// app/api/checkout/route.ts\nimport Stripe from "stripe";\n\nconst stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);' }
+            ],
+            pitfalls: ['Not handling webhooks', 'Exposing secret keys'],
+            estimatedTime: '4 hours'
+          },
+          {
+            order: 6,
+            title: 'Order Management & Admin Panel',
+            description: 'Build order tracking and admin functionality.',
+            codeSnippets: [
+              { language: 'typescript', code: '// app/admin/orders/page.tsx\nconst OrdersPage = () => {\n  const orders = await prisma.order.findMany({\n    include: { user: true, items: true }\n  });\n}' }
+            ],
+            pitfalls: ['Not adding authentication checks', 'Forgetting pagination'],
+            estimatedTime: '3 hours'
+          },
+          {
+            order: 7,
+            title: 'Deployment & Performance Optimization',
+            description: 'Deploy to production and optimize performance.',
+            codeSnippets: [
+              { language: 'bash', code: 'vercel deploy --prod' },
+              { language: 'typescript', code: '// app/page.tsx\nexport const dynamic = "force-dynamic";' }
+            ],
+            pitfalls: ['Not setting environment variables', 'Forgetting to build before deploy'],
+            estimatedTime: '2 hours'
           }
         ]
       }
@@ -67,6 +353,10 @@ async function main() {
   })
 
   console.log(`✅ Created project: ${ecommerceProject.title}`)
+  
+  // 3. SEED QUIZ QUESTIONS
+  await seedQuizQuestions()
+  
   console.log(`🌱 Seeding completed successfully!`)
 }
 
