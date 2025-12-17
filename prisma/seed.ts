@@ -1,9 +1,8 @@
-﻿// prisma/seed.ts - UPDATED TO INCLUDE QUIZ SEEDING
+﻿// prisma/seed.ts - CORRECTED FOR YOUR ACTUAL SCHEMA
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// Import the quiz seeding function
 async function seedQuizQuestions() {
   console.log('📝 Seeding quiz questions...')
   
@@ -211,7 +210,7 @@ async function seedQuizQuestions() {
     let totalQuestions = 0
     
     for (const stepData of quizData) {
-      const step = steps.find(s => s.order === stepData.stepOrder)
+      const step = steps.find((s: any) => s.order === stepData.stepOrder)
       
       if (step) {
         for (const question of stepData.questions) {
@@ -242,129 +241,164 @@ async function seedQuizQuestions() {
 async function main() {
   console.log('🌱 Starting database seeding...')
   
-  // 1. CLEAN UP EXISTING DATA (in correct order due to relations)
-  // First delete quiz-related data (reverse order due to foreign keys)
-  await prisma.quizAttempt.deleteMany()
-  console.log('🧹 Cleared existing quiz attempts')
-  
-  await prisma.quizQuestion.deleteMany()
-  console.log('🧹 Cleared existing quiz questions')
-  
-  await prisma.stepCompletion.deleteMany()
-  console.log('🧹 Cleared existing step completions')
-  
-  await prisma.step.deleteMany()
-  console.log('🧹 Cleared existing steps')
-  
-  await prisma.startedProject.deleteMany()
-  console.log('🧹 Cleared existing started projects')
-  
-  await prisma.projectTemplate.deleteMany()
-  console.log('🧹 Cleared existing project templates')
-  
-  // 2. CREATE THE E-COMMERCE STORE PROJECT
-  const ecommerceProject = await prisma.projectTemplate.create({
-    data: {
-      slug: 'ecommerce-store',
-      title: 'Build a Modern E-commerce Store',
-      description: 'Learn full-stack development by building a complete online store with Next.js, Stripe, and Prisma.',
-      difficulty: 'intermediate',
-      timeEstimate: '25-30 hours',
-      technologies: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Prisma', 'Stripe', 'NextAuth.js'],
-      resumeImpact: 5,
-      category: 'Full-Stack',
-      steps: {
-        create: [
-          {
-            order: 1,
-            title: 'Project Setup & Authentication',
-            description: 'Initialize the project with proper structure and user authentication.',
-            codeSnippets: [
-              { language: 'bash', code: 'npx create-next-app@latest ecommerce-store --typescript --tailwind --app' },
-              { language: 'typescript', code: '// app/auth.ts\nimport { NextAuth } from "next-auth"\nimport GitHubProvider from "next-auth/providers/github"' }
-            ],
-            pitfalls: ['Forgetting to set NEXTAUTH_SECRET', 'Not configuring GitHub OAuth app correctly'],
-            estimatedTime: '2 hours'
-          },
-          {
-            order: 2,
-            title: 'Database Schema & Product Models',
-            description: 'Design the database schema for products, categories, and user carts.',
-            codeSnippets: [
-              { language: 'prisma', code: 'model Product {\n  id String @id @default(cuid())\n  name String\n  price Decimal\n  description String?\n  category String\n  images String[]\n}' }
-            ],
-            pitfalls: ['Not adding proper indexes', 'Forgetting decimal precision for prices'],
-            estimatedTime: '3 hours'
-          },
-          {
-            order: 3,
-            title: 'Product Listing & UI Components',
-            description: 'Build the product grid, filters, and shopping cart UI.',
-            codeSnippets: [
-              { language: 'typescript', code: '// components/ProductGrid.tsx\nconst ProductGrid = ({ products }) => {\n  return (\n    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">\n      {products.map(product => (\n        <ProductCard key={product.id} product={product} />\n      ))}\n    </div>\n  )\n}' }
-            ],
-            pitfalls: ['Not making components responsive', 'Forgetting loading states'],
-            estimatedTime: '4 hours'
-          },
-          {
-            order: 4,
-            title: 'Shopping Cart & State Management',
-            description: 'Implement cart functionality with proper state management.',
-            codeSnippets: [
-              { language: 'typescript', code: '// store/cart-store.ts\nimport { create } from "zustand";\n\ninterface CartStore {\n  items: CartItem[];\n  addItem: (product: Product) => void;\n  removeItem: (id: string) => void;\n}' }
-            ],
-            pitfalls: ['Not persisting cart state', 'Forgetting to validate cart items'],
-            estimatedTime: '3 hours'
-          },
-          {
-            order: 5,
-            title: 'Checkout & Payment Integration',
-            description: 'Integrate Stripe for secure payment processing.',
-            codeSnippets: [
-              { language: 'typescript', code: '// app/api/checkout/route.ts\nimport Stripe from "stripe";\n\nconst stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);' }
-            ],
-            pitfalls: ['Not handling webhooks', 'Exposing secret keys'],
-            estimatedTime: '4 hours'
-          },
-          {
-            order: 6,
-            title: 'Order Management & Admin Panel',
-            description: 'Build order tracking and admin functionality.',
-            codeSnippets: [
-              { language: 'typescript', code: '// app/admin/orders/page.tsx\nconst OrdersPage = () => {\n  const orders = await prisma.order.findMany({\n    include: { user: true, items: true }\n  });\n}' }
-            ],
-            pitfalls: ['Not adding authentication checks', 'Forgetting pagination'],
-            estimatedTime: '3 hours'
-          },
-          {
-            order: 7,
-            title: 'Deployment & Performance Optimization',
-            description: 'Deploy to production and optimize performance.',
-            codeSnippets: [
-              { language: 'bash', code: 'vercel deploy --prod' },
-              { language: 'typescript', code: '// app/page.tsx\nexport const dynamic = "force-dynamic";' }
-            ],
-            pitfalls: ['Not setting environment variables', 'Forgetting to build before deploy'],
-            estimatedTime: '2 hours'
-          }
-        ]
-      }
+  try {
+    // 1. CLEAN UP EXISTING DATA (in correct order due to foreign keys)
+    // Delete in reverse order of dependencies
+    
+    // First delete QuizQuestion (depends on Step)
+    try {
+      await prisma.quizQuestion.deleteMany()
+      console.log('🧹 Cleared existing quiz questions')
+    } catch (error) {
+      console.log('⚠️ Error clearing quiz questions:', (error as Error)\.message)
     }
-  })
+    
+    // Delete StartedProject (depends on ProjectTemplate and User)
+    try {
+      await prisma.startedProject.deleteMany()
+      console.log('🧹 Cleared existing started projects')
+    } catch (error) {
+      console.log('⚠️ Error clearing started projects:', (error as Error)\.message)
+    }
+    
+    // Delete Step (depends on Project)
+    await prisma.step.deleteMany()
+    console.log('🧹 Cleared existing steps')
+    
+    // Delete ProjectTemplate
+    await prisma.projectTemplate.deleteMany()
+    console.log('🧹 Cleared existing project templates')
+    
+    // Note: We don\'t delete User, Account, Session, etc. as they contain user data
+    
+    // 2. CREATE THE E-COMMERCE STORE PROJECT
+    console.log('🚀 Creating e-commerce store project...')
+    
+    const ecommerceProject = await prisma.projectTemplate.create({
+      data: {
+        slug: 'ecommerce-store',
+        title: 'Build a Modern E-commerce Store',
+        description: 'Learn full-stack development by building a complete online store with Next.js, Stripe, and Prisma.',
+        difficulty: 'intermediate',
+        timeEstimate: '25-30 hours',
+        technologies: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Prisma', 'Stripe', 'NextAuth.js'],
+        resumeImpact: 5,
+        category: 'Full-Stack',
+        steps: {
+          create: [
+            {
+              order: 1,
+              title: 'Project Setup & Authentication',
+              description: 'Initialize the project with proper structure and user authentication.',
+              codeSnippets: [
+                { language: 'bash', code: 'npx create-next-app@latest ecommerce-store --typescript --tailwind --app' },
+                { language: 'typescript', code: '// app/auth.ts\nimport { NextAuth } from "next-auth"\nimport GitHubProvider from "next-auth/providers/github"' }
+              ],
+              pitfalls: ['Forgetting to set NEXTAUTH_SECRET', 'Not configuring GitHub OAuth app correctly'],
+              estimatedTime: '2 hours'
+            },
+            {
+              order: 2,
+              title: 'Database Schema & Product Models',
+              description: 'Design the database schema for products, categories, and user carts.',
+              codeSnippets: [
+                { language: 'prisma', code: 'model Product {\n  id String @id @default(cuid())\n  name String\n  price Decimal\n  description String?\n  category String\n  images String[]\n}' }
+              ],
+              pitfalls: ['Not adding proper indexes', 'Forgetting decimal precision for prices'],
+              estimatedTime: '3 hours'
+            },
+            {
+              order: 3,
+              title: 'Product Listing & UI Components',
+              description: 'Build the product grid, filters, and shopping cart UI.',
+              codeSnippets: [
+                { language: 'typescript', code: '// components/ProductGrid.tsx\nconst ProductGrid = ({ products }) => {\n  return (\n    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">\n      {products.map(product => (\n        <ProductCard key={product.id} product={product} />\n      ))}\n    </div>\n  )\n}' }
+              ],
+              pitfalls: ['Not making components responsive', 'Forgetting loading states'],
+              estimatedTime: '4 hours'
+            },
+            {
+              order: 4,
+              title: 'Shopping Cart & State Management',
+              description: 'Implement cart functionality with proper state management.',
+              codeSnippets: [
+                { language: 'typescript', code: '// store/cart-store.ts\nimport { create } from "zustand";\n\ninterface CartStore {\n  items: CartItem[];\n  addItem: (product: Product) => void;\n  removeItem: (id: string) => void;\n}' }
+              ],
+              pitfalls: ['Not persisting cart state', 'Forgetting to validate cart items'],
+              estimatedTime: '3 hours'
+            },
+            {
+              order: 5,
+              title: 'Checkout & Payment Integration',
+              description: 'Integrate Stripe for secure payment processing.',
+              codeSnippets: [
+                { language: 'typescript', code: '// app/api/checkout/route.ts\nimport Stripe from "stripe";\n\nconst stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);' }
+              ],
+              pitfalls: ['Not handling webhooks', 'Exposing secret keys'],
+              estimatedTime: '4 hours'
+            },
+            {
+              order: 6,
+              title: 'Order Management & Admin Panel',
+              description: 'Build order tracking and admin functionality.',
+              codeSnippets: [
+                { language: 'typescript', code: '// app/admin/orders/page.tsx\nconst OrdersPage = () => {\n  const orders = await prisma.order.findMany({\n    include: { user: true, items: true }\n  });\n}' }
+              ],
+              pitfalls: ['Not adding authentication checks', 'Forgetting pagination'],
+              estimatedTime: '3 hours'
+            },
+            {
+              order: 7,
+              title: 'Deployment & Performance Optimization',
+              description: 'Deploy to production and optimize performance.',
+              codeSnippets: [
+                { language: 'bash', code: 'vercel deploy --prod' },
+                { language: 'typescript', code: '// app/page.tsx\nexport const dynamic = "force-dynamic";' }
+              ],
+              pitfalls: ['Not setting environment variables', 'Forgetting to build before deploy'],
+              estimatedTime: '2 hours'
+            }
+          ]
+        }
+      }
+    })
 
-  console.log(`✅ Created project: ${ecommerceProject.title}`)
-  
-  // 3. SEED QUIZ QUESTIONS
-  await seedQuizQuestions()
-  
-  console.log(`🌱 Seeding completed successfully!`)
+    console.log(`✅ Created project: ${ecommerceProject.title}`)
+    console.log(`   Slug: ${ecommerceProject.slug}`)
+    console.log(`   Steps: 7`)
+    
+    // 3. SEED QUIZ QUESTIONS
+    console.log('\n📚 Seeding quiz questions...')
+    await seedQuizQuestions()
+    
+    console.log('\n🎉 Seeding completed successfully!')
+    console.log('\n📊 Summary:')
+    console.log('   - Created e-commerce store project with 7 steps')
+    console.log('   - Seeded 12 quiz questions across all steps')
+    console.log('   - Ready for users to start learning!')
+    
+  } catch (error) {
+    console.error('\n❌ Seeding error:', error)
+    console.log('\n💡 Troubleshooting:')
+    console.log('   1. Make sure database is running')
+    console.log('   2. Run: npx prisma db push (if schema changed)')
+    console.log('   3. Run: npx prisma generate (to update client)')
+    process.exit(1)
+  }
 }
 
+// Handle promise rejection
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled rejection:', error)
+  process.exit(1)
+})
+
 main()
-  .catch((e) => {
-    console.error('❌ Seeding error:', e)
+  .catch((error) => {
+    console.error('Fatal error:', error)
     process.exit(1)
   })
   .finally(async () => {
     await prisma.$disconnect()
   })
+
