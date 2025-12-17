@@ -1,24 +1,19 @@
-﻿// app/api/quiz/submit/route.ts - UPDATED VERSION
-import { NextResponse } from 'next/server'
-import { auth } from '@/app/auth'
+﻿import { auth } from '@/app/auth'
 import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
     const session = await auth()
+    
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { stepId, answers, score, passed } = body
+    const data = await req.json()
+    const { stepId, answers, score } = data
 
-    if (!stepId || !answers || score === undefined) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
+    const passed = score >= 80
 
     // Save quiz attempt
     const quizAttempt = await prisma.quizAttempt.create({
@@ -32,10 +27,11 @@ export async function POST(request: Request) {
         attemptNumber: 1
       }
     })
-    // ========== ADD PROGRESS TRACKING CODE ==========
+
+    // ========== PROGRESS TRACKING CODE ==========
     if (passed) {
       console.log("Quiz passed! Updating progress...")
-      
+
       try {
         // 1. Find the project for this step
         const step = await prisma.step.findUnique({
@@ -77,76 +73,6 @@ export async function POST(request: Request) {
           } catch (error) {
             console.log("StepCompletion error: " + error.message)
           }
-          // 4. Calculate progress
-          // Count completed steps from quiz attempts
-          const completedSteps = await prisma.quizAttempt.count({
-            where: {
-              userId: session.user.id,
-              passed: true,
-              step: { projectTemplateId: step.projectTemplate.id }
-            },
-            distinct: ["stepId"]
-          })
-          
-          const totalSteps = await prisma.step.count({
-            where: { projectTemplateId: step.projectTemplate.id }
-          })
-          
-          const newProgress = Math.round((completedSteps / totalSteps) * 100)
-          console.log("Progress: " + completedSteps + "/" + totalSteps + " = " + newProgress + "%")
-          
-          // 5. Update progress
-          await prisma.startedProject.update({
-            where: { id: startedProject.id },
-            data: { progress: newProgress }
-          })
-          
-          // 6. Award certificate at 100%
-          if (newProgress === 100) {
-            await prisma.startedProject.update({
-              where: { id: startedProject.id },
-              data: {
-                certificateEligible: true,
-                certificateIssuedAt: new Date()
-              }
-            })
-            console.log("🎉 CERTIFICATE AWARDED!")
-          }
-          // 4. Calculate progress
-          // Count completed steps from quiz attempts
-          const completedSteps = await prisma.quizAttempt.count({
-            where: {
-              userId: session.user.id,
-              passed: true,
-              step: { projectTemplateId: step.projectTemplate.id }
-            },
-            distinct: ["stepId"]
-          })
-          
-          const totalSteps = await prisma.step.count({
-            where: { projectTemplateId: step.projectTemplate.id }
-          })
-          
-          const newProgress = Math.round((completedSteps / totalSteps) * 100)
-          console.log("Progress: " + completedSteps + "/" + totalSteps + " = " + newProgress + "%")
-          
-          // 5. Update progress
-          await prisma.startedProject.update({
-            where: { id: startedProject.id },
-            data: { progress: newProgress }
-          })
-          
-          // 6. Award certificate at 100%
-          if (newProgress === 100) {
-            await prisma.startedProject.update({
-              where: { id: startedProject.id },
-              data: {
-                certificateEligible: true,
-                certificateIssuedAt: new Date()
-              }
-            })
-            console.log("🎉 CERTIFICATE AWARDED!")
-          }
           
           // 4. Calculate progress
           // Count completed steps from quiz attempts
@@ -187,87 +113,8 @@ export async function POST(request: Request) {
       } catch (error) {
         console.error("Progress update error:", error)
       }
-    }
-    // ========== END PROGRESS TRACKING CODE ==========
-    
-
-    // ===== ADDED CODE STARTS HERE =====
-    if (passed) {
-      // Mark step as completed for this user
-      await prisma.stepCompletion.upsert({
-        where: {
-          userId_stepId: {
-            userId: session.user.id,
-            stepId: stepId
-          }
-        },
-        update: {},
-        create: {
-          userId: session.user.id,
-          stepId: stepId
-        }
-      });
-
-      // Find which project this step belongs to
-      const stepWithProject = await prisma.step.findUnique({
-        where: { id: stepId },
-        include: { projectTemplate: true }
-      });
-
-      if (stepWithProject?.projectTemplate) {
-        // Find or create StartedProject record
-        const startedProject = await prisma.startedProject.upsert({
-          where: {
-            userId_projectId: {
-              userId: session.user.id,
-              projectId: stepWithProject.projectTemplate.id
-            }
-          },
-          update: {},
-          create: {
-            userId: session.user.id,
-            projectId: stepWithProject.projectTemplate.id,
-            progress: 0,
-            certificateEligible: false
-          }
-        });
-
-        // Calculate new progress
-        const totalSteps = await prisma.step.count({
-          where: { projectTemplateId: stepWithProject.projectTemplate.id }
-        });
-
-        const completedSteps = await prisma.stepCompletion.count({
-          where: {
-            userId: session.user.id,
-            step: { projectTemplateId: stepWithProject.projectTemplate.id }
-          }
-        });
-
-        const newProgress = Math.round((completedSteps / totalSteps) * 100);
-        
-        // Update progress
-        await prisma.startedProject.update({
-          where: { id: startedProject.id },
-          data: { progress: newProgress }
-        });
-
-        // Check for certificate eligibility
-        if (newProgress === 100) {
-          await prisma.startedProject.update({
-            where: { id: startedProject.id },
-            data: {
-              certificateEligible: true,
-              certificateIssuedAt: new Date()
-            }
-          });
-        }
-      }
-    }
-    // ===== ADDED CODE ENDS HERE =====
-
-    // Award points for passing quiz (your existing code)
-    if (passed) {
+      
+      // 7. Award points for passing quiz
       await prisma.user.update({
         where: { id: session.user.id },
         data: {
@@ -283,9 +130,9 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error submitting quiz:', error)
+    console.error("Quiz submission error:", error)
     return NextResponse.json(
-      { error: 'Failed to submit quiz' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
