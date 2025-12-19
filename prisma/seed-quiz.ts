@@ -246,25 +246,32 @@ async function main() {
       const step = steps.find(s => s.order === q.stepOrder)
       if (!step) continue
 
-      // Check existence
-      const exist = await prisma.quizQuestion.findFirst({
-        where: { stepId: step.id, question: q.question }
-      })
-
-      if (!exist) {
-        await prisma.quizQuestion.create({
-          data: {
+      // Use Upsert to handle collisions on (stepId, order)
+      await prisma.quizQuestion.upsert({
+        where: {
+          stepId_order: {
             stepId: step.id,
-            question: q.question,
-            options: q.options,
-            correctIndex: q.correctIndex,
-            explanation: q.explanation,
-            order: q.order,
-            difficulty: 'medium'
+            order: q.order
           }
-        })
-        questionCount++
-      }
+        },
+        update: {
+          question: q.question,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation,
+          difficulty: 'medium'
+        },
+        create: {
+          stepId: step.id,
+          question: q.question,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation,
+          order: q.order,
+          difficulty: 'medium'
+        }
+      })
+      questionCount++
     }
     console.log(`   - Seeded ${questionCount} new questions.`)
   }
