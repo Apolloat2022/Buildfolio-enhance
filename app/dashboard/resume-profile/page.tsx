@@ -92,7 +92,6 @@ export default function ResumeProfilePage() {
     }
   }
 
-  // Dynamic Handlers
   const addExperience = () => setExperiences([...experiences, { id: Date.now().toString(), jobTitle: '', company: '', startDate: '', endDate: '', current: false, description: '' }])
   const removeExperience = (id: string) => setExperiences(experiences.filter(exp => exp.id !== id))
 
@@ -113,7 +112,6 @@ export default function ResumeProfilePage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* CONTACT SECTION */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h2 className="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Contact Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -124,7 +122,6 @@ export default function ResumeProfilePage() {
           </div>
         </div>
 
-        {/* SUMMARY SECTION */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h2 className="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Professional Summary</h2>
           <textarea 
@@ -135,7 +132,6 @@ export default function ResumeProfilePage() {
           />
         </div>
 
-        {/* WORK EXPERIENCE SECTION */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex justify-between items-center mb-4 border-b pb-2">
             <h2 className="text-xl font-semibold text-gray-700">Work Experience</h2>
@@ -154,9 +150,8 @@ export default function ResumeProfilePage() {
               </div>
             </div>
           ))}
-        </section>
+        </div>
 
-        {/* EDUCATION SECTION */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex justify-between items-center mb-4 border-b pb-2">
             <h2 className="text-xl font-semibold text-gray-700">Education</h2>
@@ -177,14 +172,11 @@ export default function ResumeProfilePage() {
           ))}
         </div>
 
-        {/* SKILLS & LANGUAGES */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h2 className="text-xl font-semibold mb-2 text-gray-700">Skills</h2>
-          <p className="text-xs text-gray-500 mb-2">Separate skills with commas (e.g., React, Node, Python)</p>
-          <input type="text" placeholder="Skills..." value={formData.skillsInput} onChange={(e) => setFormData({...formData, skillsInput: e.target.value})} className="border p-2 rounded w-full mb-4" />
-          
+          <input type="text" placeholder="Skills (comma separated)..." value={formData.skillsInput} onChange={(e) => setFormData({...formData, skillsInput: e.target.value})} className="border p-2 rounded w-full mb-4" />
           <h2 className="text-xl font-semibold mb-2 text-gray-700">Languages</h2>
-          <input type="text" placeholder="Languages..." value={formData.languagesInput} onChange={(e) => setFormData({...formData, languagesInput: e.target.value})} className="border p-2 rounded w-full" />
+          <input type="text" placeholder="Languages (comma separated)..." value={formData.languagesInput} onChange={(e) => setFormData({...formData, languagesInput: e.target.value})} className="border p-2 rounded w-full" />
         </div>
 
         <div className="flex justify-end gap-4">
