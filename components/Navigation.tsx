@@ -1,29 +1,20 @@
-﻿// components/Navigation.tsx
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
-import { Home, FolderKanban, LayoutDashboard, LogOut } from "lucide-react"
-import { useState } from "react"
+import { Home, FolderKanban, LayoutDashboard, LogOut, Sparkles } from "lucide-react"
 
 export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const { data: session } = useSession()
   
-  // Debug logging
-  console.log("Current pathname:", pathname)
-  console.log("Session:", session)
-  
-  // Test function for manual navigation
   const handleTestNavigation = (path: string) => {
-    console.log("Attempting to navigate to:", path)
     router.push(path)
   }
 
-  // Hide navigation on auth pages
   if (pathname === '/auth/signin' || pathname === '/auth/error') return null
 
   return (
@@ -47,26 +38,31 @@ export default function Navigation() {
 
           {/* RIGHT: Navigation Links */}
           <div className="flex items-center space-x-8">
-            {/* Test button to check if router works */}
-            <button 
-              onClick={() => handleTestNavigation('/')}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white"
+            <Link 
+              href="/" 
+              className={`flex items-center space-x-2 ${pathname === '/' ? 'text-white' : 'text-gray-300 hover:text-white'}`}
             >
               <Home className="h-4 w-4" />
               <span>Home</span>
-            </button>
+            </Link>
             
-            {/* Regular Link for comparison */}
             <Link 
               href="/projects" 
               className={`flex items-center space-x-2 ${pathname === '/projects' ? 'text-white' : 'text-gray-300 hover:text-white'}`}
-              onClick={() => console.log("Projects link clicked")}
             >
               <FolderKanban className="h-4 w-4" />
               <span>Projects</span>
             </Link>
+
+            {/* NEW: Showcase Link */}
+            <Link 
+              href="/showcase" 
+              className={`flex items-center space-x-2 ${pathname === '/showcase' ? 'text-white' : 'text-purple-400 hover:text-purple-300 font-medium'}`}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Showcase</span>
+            </Link>
             
-            {/* Dashboard */}
             <Link 
               href="/dashboard" 
               className={`flex items-center space-x-2 ${pathname === '/dashboard' ? 'text-white' : 'text-gray-300 hover:text-white'}`}
@@ -75,7 +71,6 @@ export default function Navigation() {
               <span>Dashboard</span>
             </Link>
 
-            {/* User/Sign Out */}
             {session ? (
               <button 
                 onClick={() => signOut({ callbackUrl: '/' })}
