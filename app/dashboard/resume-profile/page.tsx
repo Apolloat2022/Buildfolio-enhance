@@ -81,7 +81,7 @@ export default function ResumeProfilePage() {
           education: education
         })
       })
-      if (res.ok) setMessage({ type: 'success', text: 'Profile Updated!' })
+      if (res.ok) setMessage({ type: 'success', text: 'Profile Saved Successfully!' })
     } catch (err) {
       setMessage({ type: 'error', text: 'Save failed' })
     } finally {
@@ -89,71 +89,102 @@ export default function ResumeProfilePage() {
     }
   }
 
-  if (loading) return <div className="p-20 text-center">Loading Profile...</div>
+  if (loading) return <div className="p-20 text-center text-blue-600 font-bold">Loading Your Profile...</div>
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="bg-blue-600 p-8 rounded-t-xl text-white mb-6">
+    <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen pb-20">
+      <div className="bg-blue-600 p-8 rounded-t-xl text-white mb-6 shadow-lg">
         <h1 className="text-3xl font-bold">Resume Builder Profile</h1>
-        <p>This is the updated version with Add/Remove buttons.</p>
+        <p className="opacity-90 text-sm">Fill out your details below to sync with your master resume.</p>
       </div>
 
       {message && (
-        <div className={`p-4 mb-4 rounded ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div className={`p-4 mb-6 rounded-lg font-bold text-center border-2 ${message.type === 'success' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-500 text-red-700'}`}>
           {message.text}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Contact info */}
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <h2 className="text-xl font-bold mb-4">Contact</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <input className="border p-2 rounded" placeholder="Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-            <input className="border p-2 rounded" placeholder="Location" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* 1. CONTACT INFO */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Contact Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input className="border p-2 rounded-lg" placeholder="Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            <input className="border p-2 rounded-lg" placeholder="Location (City, State)" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+            <input className="border p-2 rounded-lg" placeholder="Website" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} />
+            <input className="border p-2 rounded-lg" placeholder="LinkedIn URL" value={formData.linkedin} onChange={e => setFormData({...formData, linkedin: e.target.value})} />
+            <input className="border p-2 rounded-lg" placeholder="GitHub URL" value={formData.github} onChange={e => setFormData({...formData, github: e.target.value})} />
           </div>
         </div>
 
-        {/* Experience */}
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <div className="flex justify-between mb-4">
-            <h2 className="text-xl font-bold">Work Experience</h2>
-            <button type="button" onClick={addExperience} className="bg-blue-100 text-blue-700 px-3 py-1 rounded font-bold">+ Add</button>
+        {/* 2. PROFESSIONAL SUMMARY */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Professional Summary</h2>
+          <textarea 
+            className="border p-3 rounded-lg w-full h-32 focus:ring-2 focus:ring-blue-500 outline-none" 
+            placeholder="Summarize your professional experience and key achievements..."
+            value={formData.professionalSummary} 
+            onChange={e => setFormData({...formData, professionalSummary: e.target.value})} 
+          />
+        </div>
+
+        {/* 3. WORK EXPERIENCE */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 className="text-xl font-bold text-gray-800">Work Experience</h2>
+            <button type="button" onClick={addExperience} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors">+ Add Job</button>
           </div>
+          {experiences.length === 0 && <p className="text-gray-400 italic text-center py-4 text-sm">No work experience added yet.</p>}
           {experiences.map((exp, idx) => (
-            <div key={exp.id} className="flex gap-2 mb-2">
-              <input className="border p-2 rounded flex-1" placeholder="Job Title" value={exp.jobTitle} onChange={e => {
+            <div key={exp.id} className="flex flex-col md:flex-row gap-2 mb-4 bg-gray-50 p-3 rounded-lg relative">
+              <input className="border p-2 rounded-lg flex-1 bg-white" placeholder="Job Title" value={exp.jobTitle} onChange={e => {
                 const newExp = [...experiences]; newExp[idx].jobTitle = e.target.value; setExperiences(newExp);
               }} />
-              <input className="border p-2 rounded flex-1" placeholder="Company" value={exp.company} onChange={e => {
+              <input className="border p-2 rounded-lg flex-1 bg-white" placeholder="Company" value={exp.company} onChange={e => {
                 const newExp = [...experiences]; newExp[idx].company = e.target.value; setExperiences(newExp);
               }} />
-              <button type="button" onClick={() => removeExperience(exp.id)} className="text-red-500 font-bold">X</button>
+              <button type="button" onClick={() => removeExperience(exp.id)} className="bg-red-50 text-red-500 px-3 py-2 rounded-lg font-bold hover:bg-red-100 transition-colors">Delete</button>
             </div>
           ))}
         </div>
 
-        {/* Education */}
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <div className="flex justify-between mb-4">
-            <h2 className="text-xl font-bold">Education</h2>
-            <button type="button" onClick={addEducation} className="bg-blue-100 text-blue-700 px-3 py-1 rounded font-bold">+ Add</button>
+        {/* 4. EDUCATION */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 className="text-xl font-bold text-gray-800">Education</h2>
+            <button type="button" onClick={addEducation} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors">+ Add Education</button>
           </div>
+          {education.length === 0 && <p className="text-gray-400 italic text-center py-4 text-sm">No education added yet.</p>}
           {education.map((edu, idx) => (
-            <div key={edu.id} className="flex gap-2 mb-2">
-              <input className="border p-2 rounded flex-1" placeholder="Degree" value={edu.degree} onChange={e => {
+            <div key={edu.id} className="flex flex-col md:flex-row gap-2 mb-4 bg-gray-50 p-3 rounded-lg">
+              <input className="border p-2 rounded-lg flex-1 bg-white" placeholder="Degree/Certification" value={edu.degree} onChange={e => {
                 const newEdu = [...education]; newEdu[idx].degree = e.target.value; setEducation(newEdu);
               }} />
-              <input className="border p-2 rounded flex-1" placeholder="School" value={edu.school} onChange={e => {
+              <input className="border p-2 rounded-lg flex-1 bg-white" placeholder="School" value={edu.school} onChange={e => {
                 const newEdu = [...education]; newEdu[idx].school = e.target.value; setEducation(newEdu);
               }} />
-              <button type="button" onClick={() => removeEducation(edu.id)} className="text-red-500 font-bold">X</button>
+              <button type="button" onClick={() => removeEducation(edu.id)} className="bg-red-50 text-red-500 px-3 py-2 rounded-lg font-bold hover:bg-red-100 transition-colors">Delete</button>
             </div>
           ))}
         </div>
 
-        <button type="submit" disabled={saving} className="w-full bg-blue-600 text-white p-4 rounded-xl font-bold">
-          {saving ? 'Saving...' : 'Save All Changes'}
+        {/* 5. SKILLS & LANGUAGES */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Skills & Languages</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-semibold text-gray-600 block mb-1">Additional Skills (Comma-separated)</label>
+              <input className="border p-2 rounded-lg w-full" placeholder="Project Management, Python, AWS..." value={formData.skillsInput} onChange={e => setFormData({...formData, skillsInput: e.target.value})} />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-600 block mb-1">Languages (Comma-separated)</label>
+              <input className="border p-2 rounded-lg w-full" placeholder="English (Native), French (Bilingual)..." value={formData.languagesInput} onChange={e => setFormData({...formData, languagesInput: e.target.value})} />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" disabled={saving} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 disabled:opacity-50 transition-all">
+          {saving ? 'Saving Profile...' : 'Save All Changes'}
         </button>
       </form>
     </div>
